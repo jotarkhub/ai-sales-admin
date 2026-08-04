@@ -86,7 +86,9 @@ class LeadIntakeTest extends TestCase
         ]);
 
         $submission = $lead->formSubmissions()->first();
-        $this->assertSame(['Nama' => 'Budi Pengujian', 'Kota' => 'Jakarta'], $submission->raw_payload);
+        // assertEquals (bukan assertSame): MySQL JSON column tidak menjamin urutan key sama
+        // seperti saat disimpan (beda dengan SQLite yang menyimpan teks apa adanya).
+        $this->assertEquals(['Nama' => 'Budi Pengujian', 'Kota' => 'Jakarta'], $submission->raw_payload);
 
         $this->assertDatabaseHas('lead_activities', ['lead_id' => $lead->id, 'type' => 'lead_created']);
         $this->assertDatabaseHas('lead_activities', ['lead_id' => $lead->id, 'type' => 'initial_message_queued']);

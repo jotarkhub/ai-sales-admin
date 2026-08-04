@@ -34,7 +34,7 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | Auth & authorization (role-based) | `CI_TEST_PASSED` | Run [#6](https://github.com/jotarkhub/ai-sales-admin/actions/runs/) commit `1af8e3a` hijau. Login session-based + rate limit 5x/menit, middleware `role:` |
 | Audit log service | `CI_TEST_PASSED` | Sama seperti di atas — `App\Services\Audit\AuditLogService`, dipakai di login/logout, teruji |
 | Business Configuration module | `LOCAL_TEST_PASSED` | `php artisan test`: 20 passed (72 assertions) di komputer user. Menunggu konfirmasi CI (commit `fd4df06`) untuk naik ke `CI_TEST_PASSED` |
-| Lead Intake endpoint | `IMPLEMENTED_UNVERIFIED` | `POST /api/v1/leads/intake` + HMAC signature middleware, normalisasi nomor telepon, dedup, `LeadIntakeService`, 7 test baru (`LeadIntakeTest`). Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
+| Lead Intake endpoint | `LOCAL_TEST_PASSED` | `php artisan test`: 27 passed (102 assertions) di komputer user, termasuk 7 test `LeadIntakeTest`. Menunggu konfirmasi CI (commit `ad8f2b3`) |
 | WhatsApp integration | belum dimulai | `CREDENTIAL_REQUIRED` (token/phone number ID belum ada) |
 | OpenAI / Conversation Engine | belum dimulai | `CREDENTIAL_REQUIRED` (API key belum ada) |
 | Google Apps Script | belum dimulai | `CREDENTIAL_REQUIRED` (belum ada Google Form/Sheet target) |

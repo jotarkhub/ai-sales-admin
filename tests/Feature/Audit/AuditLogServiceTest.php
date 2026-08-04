@@ -35,8 +35,9 @@ class AuditLogServiceTest extends TestCase
             'subject_type' => Business::class,
             'subject_id' => $business->id,
         ]);
-        $this->assertSame(['name' => 'Lama'], $log->fresh()->before);
-        $this->assertSame(['name' => 'Baru'], $log->fresh()->after);
+        // assertEquals (bukan assertSame): MySQL JSON column tidak menjamin urutan key.
+        $this->assertEquals(['name' => 'Lama'], $log->fresh()->before);
+        $this->assertEquals(['name' => 'Baru'], $log->fresh()->after);
     }
 
     public function test_record_system_tidak_punya_actor_id(): void
