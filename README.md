@@ -1,59 +1,64 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AI Sales Admin (nama sementara)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Agen administrasi penjualan berbasis Laravel: menerima calon customer dari Google Form,
+menghubungi via WhatsApp Business Cloud API (resmi), menjawab & menggali kebutuhan pakai
+OpenAI, menilai kualitas prospek, follow-up otomatis, dan bisa diambil alih admin manusia
+kapan pun diperlukan.
 
-## About Laravel
+Status implementasi terkini ada di [`docs/STATUS.md`](docs/STATUS.md) — **jangan anggap suatu
+modul selesai hanya dari nama filenya**, cek status di sana.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Arsitektur, ERD, sequence diagram, state machine, daftar environment variable, risiko, dan
+acceptance criteria ada di [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Laravel 12, PHP ^8.2
+- MySQL/MariaDB (wajib — lihat `.env.example`; SQLite hanya dipakai untuk test lokal cepat via
+  `.env.testing`)
+- Laravel Queue (fallback `database`, `redis` bila tersedia) + Scheduler
+- Blade/Livewire untuk dashboard internal
+- WhatsApp Business Platform Cloud API (bukan otomasi WhatsApp Web)
+- OpenAI Responses API sebagai mesin percakapan, dengan provider abstraction agar bisa diganti
+- Google Apps Script sebagai penghubung Google Form -> backend (tanpa API key WhatsApp/AI di
+  dalamnya)
+- Pest/PHPUnit untuk automated test
+- GitHub Actions sebagai bukti eksekusi utama (`.github/workflows/ci.yml`)
 
-## Learning Laravel
+## Setup Lokal (Windows + XAMPP)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```powershell
+git clone https://github.com/jotarkhub/ai-sales-admin.git
+cd ai-sales-admin
+composer install
+copy .env.example .env
+php artisan key:generate
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Buat database MySQL kosong bernama `ai_sales_admin` lewat phpMyAdmin/HeidiSQL (default XAMPP:
+user `root`, password kosong — sudah sesuai default di `.env.example`), lalu:
 
-## Laravel Sponsors
+```powershell
+php artisan migrate
+php artisan test
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+`php artisan test` otomatis memakai SQLite in-memory (lihat `.env.testing`), jadi tidak perlu
+database test terpisah untuk menjalankan test secara lokal.
 
-### Premium Partners
+## CI
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Setiap push/PR ke `main`/`develop` menjalankan `composer validate`, `composer install`,
+`migrate:fresh` di MySQL sungguhan, `php artisan test`, dan `vendor/bin/pint --test`. Ini adalah
+bukti utama bahwa kode benar-benar bisa dieksekusi — cek tab **Actions** di GitHub sebelum
+menganggap sebuah perubahan "selesai".
 
-## Contributing
+## Prinsip Pengembangan
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Tidak ada kode dummy yang berpura-pura bekerja. Fungsi yang butuh kredensial (WhatsApp,
+  OpenAI, Google) ditandai jelas `CREDENTIAL_REQUIRED` sampai kredensial asli tersedia.
+- Semua secret ada di environment variable, tidak pernah di source code.
+- Setiap perubahan status prospek dan konfigurasi tercatat di `audit_logs`.
+- Admin manusia selalu punya kendali akhir — AI tidak bisa mengubah lead menjadi `won`.
+- UI berbahasa Indonesia; kode, nama class/tabel/API berbahasa Inggris.
+- Zona waktu `Asia/Jakarta`, nomor telepon dinormalisasi ke format internasional (E.164).
