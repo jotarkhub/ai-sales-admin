@@ -29,10 +29,10 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | Fase 0 — Audit environment | `DESIGNED` (selesai sebagai temuan, bukan kode) | Lihat riwayat percakapan |
 | Fase 1 — Arsitektur & spesifikasi | `DESIGNED` | `docs/ARCHITECTURE.md` |
 | Bootstrap Laravel 12 (PHP 8.2, lokal) | `LOCAL_TEST_PASSED` | `composer create-project` sukses, `git push` ke `github.com/jotarkhub/ai-sales-admin` sukses |
-| GitHub Actions CI (baseline: default Laravel test suite) | `IMPLEMENTED_UNVERIFIED` | `.github/workflows/ci.yml` dibuat, **belum ada run yang dikonfirmasi hijau** — menunggu push berikutnya |
-| Migration & model tabel inti (24 tabel) | `LOCAL_TEST_PASSED` | `php artisan test` di komputer user: 3 passed (30 assertions), termasuk `CoreSchemaSmokeTest` yang menembus semua 24 tabel. Menunggu konfirmasi CI (MySQL) untuk naik ke `CI_TEST_PASSED` |
-| Auth & authorization (role-based) | belum dimulai | — |
-| Audit log service | belum dimulai | — |
+| GitHub Actions CI (baseline: composer validate, migrate:fresh, test, pint) | `CI_TEST_PASSED` | Run [#5](https://github.com/jotarkhub/ai-sales-admin/actions/runs/30917950801) commit `02b6dcc` hijau |
+| Migration & model tabel inti (24 tabel) | `CI_TEST_PASSED` | Lokal: 3 passed/30 assertions. CI (MySQL 8.0): migrate:fresh + test + pint hijau di run #5. Sempat gagal 2x: (1) nama unique constraint `integration_credentials` >64 char (batas identifier MySQL, tidak ketahuan di SQLite lokal), (2) Pint fully-qualified-class-name di test — keduanya sudah diperbaiki |
+| Auth & authorization (role-based) | `IMPLEMENTED_UNVERIFIED` | Login session-based + rate limit 5x/menit, middleware `role:` (alias di `bootstrap/app.php`), 8 test baru (`LoginTest`, `RoleMiddlewareTest`). Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
+| Audit log service | `IMPLEMENTED_UNVERIFIED` | `App\Services\Audit\AuditLogService` (record/recordSystem/recordAi), dipakai di login/logout, 3 test baru (`AuditLogServiceTest`). Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
 | Business Configuration module | belum dimulai | — |
 | Lead Intake endpoint | belum dimulai | — |
 | WhatsApp integration | belum dimulai | `CREDENTIAL_REQUIRED` (token/phone number ID belum ada) |
