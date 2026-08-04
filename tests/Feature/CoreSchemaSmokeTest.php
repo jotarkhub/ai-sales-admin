@@ -29,6 +29,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Models\WebhookEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -235,7 +236,7 @@ class CoreSchemaSmokeTest extends TestCase
             'is_active' => true,
         ]);
         $this->assertSame('nilai-rahasia-hanya-untuk-test', $credential->fresh()->encrypted_value);
-        $rawColumnValue = \Illuminate\Support\Facades\DB::table('integration_credentials')
+        $rawColumnValue = DB::table('integration_credentials')
             ->where('id', $credential->id)->value('encrypted_value');
         $this->assertNotSame('nilai-rahasia-hanya-untuk-test', $rawColumnValue, 'Nilai di kolom DB harus terenkripsi, bukan plaintext.');
 
