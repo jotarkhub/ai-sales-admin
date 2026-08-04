@@ -30,7 +30,7 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | Fase 1 — Arsitektur & spesifikasi | `DESIGNED` | `docs/ARCHITECTURE.md` |
 | Bootstrap Laravel 12 (PHP 8.2, lokal) | `LOCAL_TEST_PASSED` | `composer create-project` sukses, `git push` ke `github.com/jotarkhub/ai-sales-admin` sukses |
 | GitHub Actions CI (baseline: default Laravel test suite) | `IMPLEMENTED_UNVERIFIED` | `.github/workflows/ci.yml` dibuat, **belum ada run yang dikonfirmasi hijau** — menunggu push berikutnya |
-| Migration & model tabel inti (24 tabel) | `IMPLEMENTED_UNVERIFIED` | 26 file migration + 22 model + 3 enum ditulis, lolos `php -l` (syntax only, bukan eksekusi). Ada `tests/Feature/CoreSchemaSmokeTest.php` yang menembus semua tabel — **menunggu hasil `php artisan test` sungguhan dari user/CI** |
+| Migration & model tabel inti (24 tabel) | `LOCAL_TEST_PASSED` | `php artisan test` di komputer user: 3 passed (30 assertions), termasuk `CoreSchemaSmokeTest` yang menembus semua 24 tabel. Menunggu konfirmasi CI (MySQL) untuk naik ke `CI_TEST_PASSED` |
 | Auth & authorization (role-based) | belum dimulai | — |
 | Audit log service | belum dimulai | — |
 | Business Configuration module | belum dimulai | — |
