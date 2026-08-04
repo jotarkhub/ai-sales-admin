@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\BusinessConfigurationController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,4 +22,11 @@ Route::middleware('auth')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])
         ->middleware('role:admin,supervisor,agent')
         ->name('dashboard');
+
+    // Otorisasi granular (view vs update) ditegakkan oleh BusinessPolicy di controller,
+    // middleware role di sini hanya gerbang pertama supaya non-staff tidak bisa masuk sama sekali.
+    Route::middleware('role:admin,supervisor,agent')->group(function () {
+        Route::get('pengaturan/bisnis', [BusinessConfigurationController::class, 'edit'])->name('business.edit');
+        Route::put('pengaturan/bisnis', [BusinessConfigurationController::class, 'update'])->name('business.update');
+    });
 });
