@@ -452,7 +452,7 @@ stateDiagram-v2
 | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | semua | MySQL/MariaDB. Local dev boleh sqlite hanya untuk `.env.testing` |
 | `QUEUE_CONNECTION` | semua | `redis` bila tersedia, fallback `database` |
 | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | opsional | Kosongkan jika pakai fallback database queue |
-| `LEAD_INTAKE_SECRET` | Fase 2 | Shared secret Apps Script <-> endpoint intake. **Belum dibuat, akan ditambah saat modul Lead Intake dikerjakan.** |
+| `LEAD_INTAKE_SECRET` | Fase 2 | Shared secret HMAC-SHA256 Apps Script <-> endpoint intake (`POST /api/v1/leads/intake`). Sudah aktif di `.env`/`.env.example`/`.env.testing`. |
 | `WHATSAPP_CLOUD_API_TOKEN` | Fase 3 | Access token Meta. **CREDENTIAL_REQUIRED — belum ada.** |
 | `WHATSAPP_PHONE_NUMBER_ID` | Fase 3 | **CREDENTIAL_REQUIRED** |
 | `WHATSAPP_BUSINESS_ACCOUNT_ID` | Fase 3 | **CREDENTIAL_REQUIRED** |

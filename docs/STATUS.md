@@ -33,8 +33,8 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | Migration & model tabel inti (24 tabel) | `CI_TEST_PASSED` | Lokal: 3 passed/30 assertions. CI (MySQL 8.0): migrate:fresh + test + pint hijau di run #5. Sempat gagal 2x: (1) nama unique constraint `integration_credentials` >64 char (batas identifier MySQL, tidak ketahuan di SQLite lokal), (2) Pint fully-qualified-class-name di test — keduanya sudah diperbaiki |
 | Auth & authorization (role-based) | `CI_TEST_PASSED` | Run [#6](https://github.com/jotarkhub/ai-sales-admin/actions/runs/) commit `1af8e3a` hijau. Login session-based + rate limit 5x/menit, middleware `role:` |
 | Audit log service | `CI_TEST_PASSED` | Sama seperti di atas — `App\Services\Audit\AuditLogService`, dipakai di login/logout, teruji |
-| Business Configuration module | `IMPLEMENTED_UNVERIFIED` | `BusinessPolicy` (admin-only update), `UpdateBusinessRequest`, `BusinessConfigurationController`, form Blade, 5 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
-| Lead Intake endpoint | belum dimulai | — |
+| Business Configuration module | `LOCAL_TEST_PASSED` | `php artisan test`: 20 passed (72 assertions) di komputer user. Menunggu konfirmasi CI (commit `fd4df06`) untuk naik ke `CI_TEST_PASSED` |
+| Lead Intake endpoint | `IMPLEMENTED_UNVERIFIED` | `POST /api/v1/leads/intake` + HMAC signature middleware, normalisasi nomor telepon, dedup, `LeadIntakeService`, 7 test baru (`LeadIntakeTest`). Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
 | WhatsApp integration | belum dimulai | `CREDENTIAL_REQUIRED` (token/phone number ID belum ada) |
 | OpenAI / Conversation Engine | belum dimulai | `CREDENTIAL_REQUIRED` (API key belum ada) |
 | Google Apps Script | belum dimulai | `CREDENTIAL_REQUIRED` (belum ada Google Form/Sheet target) |

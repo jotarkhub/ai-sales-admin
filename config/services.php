@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    // Shared secret HMAC untuk memverifikasi request dari Google Apps Script.
+    // Lihat App\Http\Middleware\VerifyLeadIntakeSignature.
+    'lead_intake' => [
+        'secret' => env('LEAD_INTAKE_SECRET'),
+    ],
+
 ];
