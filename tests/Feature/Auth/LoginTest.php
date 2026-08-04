@@ -6,6 +6,8 @@ use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
@@ -63,17 +65,23 @@ class LoginTest extends TestCase
     {
         $user = User::factory()->create(['password' => Hash::make('password-benar')]);
 
+        // Simulasikan 5 percobaan gagal sebelumnya langsung lewat RateLimiter (bukan 6x
+        // round-trip HTTP berurutan) — throttleKey harus identik dengan
+        // App\Http\Requests\Auth\LoginRequest::throttleKey(). Request test Laravel selalu
+        // memakai REMOTE_ADDR 127.0.0.1 secara default.
+        $throttleKey = Str::transliterate(Str::lower($user->email).'|127.0.0.1');
         for ($i = 0; $i < 5; $i++) {
-            $this->post('/login', ['email' => $user->email, 'password' => 'salah']);
+            RateLimiter::hit($throttleKey);
         }
 
-        $response = $this->post('/login', ['email' => $user->email, 'password' => 'salah']);
+        $response = $this->post('/login', ['email' => $user->email, 'password' => 'password-benar']);
 
         $response->assertSessionHasErrors('email');
         $this->assertStringContainsString(
             'Terlalu banyak percobaan',
             session('errors')->first('email')
         );
+        $this->assertGuest();
     }
 
     public function test_login_dan_logout_tercatat_di_audit_log(): void
