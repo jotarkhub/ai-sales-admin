@@ -27,7 +27,10 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->unique(['business_id', 'provider', 'credential_key']);
+            // Nama constraint diberi eksplisit & dipendekkan — nama otomatis Laravel
+            // ("integration_credentials_business_id_provider_credential_key_unique", 66 char)
+            // melebihi batas identifier MySQL (64 char) dan gagal di CI walau lolos di SQLite.
+            $table->unique(['business_id', 'provider', 'credential_key'], 'integration_credentials_unique');
         });
     }
 
