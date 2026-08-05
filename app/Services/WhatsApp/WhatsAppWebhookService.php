@@ -12,6 +12,7 @@ use App\Models\LeadSource;
 use App\Models\Message;
 use App\Models\MessageStatus;
 use App\Models\WebhookEvent;
+use App\Services\Ai\ConversationEngine;
 use App\Services\Audit\AuditLogService;
 use App\Services\Lead\PhoneNumberNormalizer;
 use Illuminate\Database\QueryException;
@@ -23,15 +24,17 @@ use Throwable;
  * Terima payload webhook WhatsApp Cloud API (sudah lolos verifikasi signature di
  * App\Http\Middleware\VerifyWhatsAppWebhookSignature) dan simpan sebagai data lokal.
  *
- * SENGAJA tidak memicu balasan AI di sini — itu tanggung jawab Conversation Engine
- * (lanjutan Fase 4) yang membaca pesan inbound yang sudah tersimpan. Modul ini murni
- * "ingestion": pastikan tidak ada pesan yang hilang atau diproses dua kali.
+ * Setelah pesan inbound tersimpan (ingestion beres, transaksi commit), diteruskan ke
+ * App\Services\Ai\ConversationEngine untuk memutuskan balasan AI — dipanggil DI LUAR
+ * transaksi ingestion supaya kegagalan AI/pengiriman balasan tidak menandai pesan masuk
+ * itu sendiri sebagai gagal diterima.
  */
 class WhatsAppWebhookService
 {
     public function __construct(
         private readonly PhoneNumberNormalizer $phoneNormalizer,
         private readonly AuditLogService $auditLog,
+        private readonly ConversationEngine $conversationEngine,
     ) {}
 
     public function handle(array $payload): void
@@ -85,8 +88,10 @@ class WhatsAppWebhookService
             return;
         }
 
+        $conversation = null;
+
         try {
-            DB::transaction(function () use ($messageItem, $value, $externalId, $webhookEvent) {
+            DB::transaction(function () use ($messageItem, $value, $externalId, $webhookEvent, &$conversation) {
                 $business = Business::where('is_active', true)->firstOrFail();
 
                 $rawFrom = $messageItem['from'] ?? null;
@@ -143,6 +148,12 @@ class WhatsAppWebhookService
             });
         } catch (Throwable $e) {
             $webhookEvent->update(['status' => WebhookEvent::STATUS_FAILED, 'error_message' => $e->getMessage()]);
+
+            return;
+        }
+
+        if ($conversation !== null) {
+            $this->conversationEngine->respond($conversation);
         }
     }
 

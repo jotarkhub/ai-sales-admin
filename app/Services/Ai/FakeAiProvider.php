@@ -14,7 +14,12 @@ class FakeAiProvider implements AiProviderContract
     /** @var array<int, array{messages: array, systemPrompt: ?string}> */
     private array $calls = [];
 
-    private string $canned = '[BALASAN AI PALSU — hanya untuk testing, tidak pernah dikirim ke pelanggan sungguhan]';
+    /**
+     * Default-nya JSON terstruktur valid (bukan escalation, confidence tinggi) supaya test
+     * yang tidak peduli isi balasan AI (mis. test webhook) tetap mengikuti jalur "sukses"
+     * secara default. Test yang mau menguji jalur eskalasi/gagal panggil respondWith().
+     */
+    private string $canned = '{"intent":"general_inquiry","reply_message":"[BALASAN AI PALSU — hanya untuk testing, tidak pernah dikirim ke pelanggan sungguhan] Terima kasih sudah menghubungi kami, ada yang bisa dibantu?","escalation_required":false,"escalation_reason":null,"confidence":0.9}';
 
     public function generateReply(array $messages, ?string $systemPrompt = null): AiReplyResult
     {
