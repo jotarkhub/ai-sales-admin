@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BusinessConfigurationController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KnowledgeItemController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadFieldDefinitionController;
 use Illuminate\Support\Facades\Route;
@@ -50,5 +51,13 @@ Route::middleware('auth')->group(function () {
         Route::get('percakapan/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
         Route::post('percakapan/{conversation}/takeover', [ConversationController::class, 'takeover'])->name('conversations.takeover');
         Route::post('percakapan/{conversation}/release', [ConversationController::class, 'release'])->name('conversations.release');
+
+        // Knowledge Base (Fase 5c) — sumber jawaban AI. Tulis/publikasi dibatasi admin/supervisor,
+        // ditegakkan di KnowledgeItemPolicy::manage, bukan di middleware role di sini.
+        Route::get('knowledge', [KnowledgeItemController::class, 'index'])->name('knowledge.index');
+        Route::post('knowledge', [KnowledgeItemController::class, 'store'])->name('knowledge.store');
+        Route::get('knowledge/{item}/edit', [KnowledgeItemController::class, 'edit'])->name('knowledge.edit');
+        Route::put('knowledge/{item}', [KnowledgeItemController::class, 'update'])->name('knowledge.update');
+        Route::patch('knowledge/{item}/toggle-publish', [KnowledgeItemController::class, 'togglePublish'])->name('knowledge.toggle-publish');
     });
 });

@@ -15,6 +15,7 @@
     <p>Peran: {{ $user->roles->pluck('name')->join(', ') ?: 'Belum ada peran' }}</p>
     <p>
         <a href="{{ route('leads.index') }}">Daftar Lead</a>
+        &middot; <a href="{{ route('knowledge.index') }}">Knowledge Base</a>
         &middot; <a href="{{ route('business.edit') }}">Konfigurasi Bisnis</a>
         &middot; <a href="{{ route('lead-fields.index') }}">Field Custom Lead</a>
     </p>

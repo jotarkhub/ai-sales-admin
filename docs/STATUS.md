@@ -39,9 +39,9 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | OpenAI / Conversation Engine | belum dimulai | `CREDENTIAL_REQUIRED` (API key belum ada) |
 | Google Apps Script (Fase 6) | `IMPLEMENTED_UNVERIFIED` | `apps-script/LeadIntake.gs` + `apps-script/README.md` ditulis lengkap (HMAC signature, idempotency lewat sheet log, retry, testConfiguration(), dukungan CUSTOM_FIELD_MAP). **Menunggu Anda buat Google Form + pasang script + jalankan testConfiguration()** sesuai README |
 | Custom Lead Fields (form builder) | `CI_TEST_PASSED` | Run [#10](https://github.com/jotarkhub/ai-sales-admin/actions) commit `0e5d910` hijau. Lokal: 35 passed (133 assertions), Pint hijau |
-| Dashboard admin — Lead List & Detail (Fase 5a) | `LOCAL_TEST_PASSED` | `php artisan test`: 49 passed (174 assertions), Pint hijau, di komputer user. Commit `988c973` di-push. Menunggu konfirmasi CI untuk naik ke `CI_TEST_PASSED` |
-| Dashboard admin — Percakapan & Takeover (Fase 5b) | `IMPLEMENTED_UNVERIFIED` | `ConversationPolicy`, `ConversationController` (show/takeover/release), view `conversations/show`. Take over otomatis klaim eskalasi terbuka; lead mencapai status akhir (won/lost/opt_out) otomatis menutup percakapan aktif (state machine #8). 11 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
-| Dashboard admin — Knowledge Base (Fase 5c) | belum dimulai | — |
+| Dashboard admin — Lead List & Detail (Fase 5a) | `CI_TEST_PASSED` | Run [#11](https://github.com/jotarkhub/ai-sales-admin/actions) commit `988c973` hijau. Lokal: 49 passed (174 assertions), Pint hijau |
+| Dashboard admin — Percakapan & Takeover (Fase 5b) | `CI_TEST_PASSED` | Run [#12](https://github.com/jotarkhub/ai-sales-admin/actions) commit `9048523` hijau. Lokal: 58 passed (197 assertions), Pint hijau |
+| Dashboard admin — Knowledge Base (Fase 5c) | `IMPLEMENTED_UNVERIFIED` | `KnowledgeItemPolicy`, `KnowledgeItemController` (index/store/edit/update/togglePublish), view `knowledge/index`+`edit`. Tulis/publikasi dibatasi admin/supervisor; draft tidak pernah dipakai AI (scopeUsableByAi). 7 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
 
 ## Provider Fake — Aturan Keras
 
