@@ -15,6 +15,8 @@ class FollowUp extends Model
 
     public const STATUS_SKIPPED = 'skipped';
 
+    public const STATUS_FAILED = 'failed';
+
     protected $fillable = [
         'business_id', 'lead_id', 'sent_message_id', 'trigger_type', 'scheduled_at', 'status',
         'channel', 'template_used', 'attempt_number', 'max_attempts', 'cancelled_by',
