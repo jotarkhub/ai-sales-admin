@@ -35,14 +35,15 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | Audit log service | `CI_TEST_PASSED` | Sama seperti di atas — `App\Services\Audit\AuditLogService`, dipakai di login/logout, teruji |
 | Business Configuration module | `LOCAL_TEST_PASSED` | `php artisan test`: 20 passed (72 assertions) di komputer user. Menunggu konfirmasi CI (commit `fd4df06`) untuk naik ke `CI_TEST_PASSED` |
 | Lead Intake endpoint | `CI_TEST_PASSED` | Run [#9](https://github.com/jotarkhub/ai-sales-admin/actions) commit `e3f3f09` hijau. Sempat gagal di CI (run #8, `ad8f2b3`): `assertSame` pada kolom JSON gagal di MySQL karena urutan key tidak dijamin sama (beda dari SQLite) — sudah diperbaiki jadi `assertEquals` |
-| WhatsApp — Provider Abstraction (fondasi Fase 3) | `IMPLEMENTED_UNVERIFIED` | `WhatsAppProviderContract`, `FakeWhatsAppProvider` (dipakai testing), `MetaWhatsAppProvider` (panggilan HTTP nyata ke Graph API, diuji dengan `Http::fake()` — bukan cuma placeholder), `ProviderGuard` (aplikasi tolak boot kalau production+fake). 10 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
+| WhatsApp — Provider Abstraction (fondasi Fase 3) | `CI_TEST_PASSED` | Run [#14](https://github.com/jotarkhub/ai-sales-admin/actions) commit `0f95213` hijau. Lokal: 74 passed (236 assertions), Pint hijau |
 | WhatsApp — kirim pesan sungguhan | belum dimulai | `CREDENTIAL_REQUIRED` (token/phone number ID Meta belum ada — provider abstraction di atas sudah siap dipakai begitu kredensial tersedia) |
-| OpenAI / Conversation Engine | belum dimulai | `CREDENTIAL_REQUIRED` (API key belum ada) |
+| AI — Provider Abstraction (fondasi Fase 4) | `IMPLEMENTED_UNVERIFIED` | `AiProviderContract`, `FakeAiProvider` (dipakai testing, balasan bisa diatur lewat `respondWith()`), `OpenAiProvider` (panggilan HTTP nyata ke Chat Completions, diuji dengan `Http::fake()`). Pola sama persis dengan WhatsApp provider abstraction, termasuk `ProviderGuard`. 8 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
+| AI — Conversation Engine (prompt building, knowledge retrieval, scoring, eskalasi) | belum dimulai | `CREDENTIAL_REQUIRED` (API key OpenAI belum ada — provider abstraction di atas sudah siap dipakai begitu kredensial tersedia) |
 | Google Apps Script (Fase 6) | `IMPLEMENTED_UNVERIFIED` | `apps-script/LeadIntake.gs` + `apps-script/README.md` ditulis lengkap (HMAC signature, idempotency lewat sheet log, retry, testConfiguration(), dukungan CUSTOM_FIELD_MAP). **Menunggu Anda buat Google Form + pasang script + jalankan testConfiguration()** sesuai README |
 | Custom Lead Fields (form builder) | `CI_TEST_PASSED` | Run [#10](https://github.com/jotarkhub/ai-sales-admin/actions) commit `0e5d910` hijau. Lokal: 35 passed (133 assertions), Pint hijau |
 | Dashboard admin — Lead List & Detail (Fase 5a) | `CI_TEST_PASSED` | Run [#11](https://github.com/jotarkhub/ai-sales-admin/actions) commit `988c973` hijau. Lokal: 49 passed (174 assertions), Pint hijau |
 | Dashboard admin — Percakapan & Takeover (Fase 5b) | `CI_TEST_PASSED` | Run [#12](https://github.com/jotarkhub/ai-sales-admin/actions) commit `9048523` hijau. Lokal: 58 passed (197 assertions), Pint hijau |
-| Dashboard admin — Knowledge Base (Fase 5c) | `LOCAL_TEST_PASSED` | `php artisan test`: 65 passed (218 assertions), Pint hijau, di komputer user. Commit `c76e1cf` di-push. Menunggu konfirmasi CI untuk naik ke `CI_TEST_PASSED` |
+| Dashboard admin — Knowledge Base (Fase 5c) | `CI_TEST_PASSED` | Run [#13](https://github.com/jotarkhub/ai-sales-admin/actions) commit `c76e1cf` hijau. Lokal: 65 passed (218 assertions), Pint hijau |
 
 ## Provider Fake — Aturan Keras
 

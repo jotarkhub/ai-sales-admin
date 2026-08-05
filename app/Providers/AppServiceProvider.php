@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Contracts\AiProviderContract;
 use App\Contracts\WhatsAppProviderContract;
+use App\Services\Ai\FakeAiProvider;
+use App\Services\Ai\OpenAiProvider;
 use App\Services\WhatsApp\FakeWhatsAppProvider;
 use App\Services\WhatsApp\MetaWhatsAppProvider;
 use App\Support\ProviderGuard;
@@ -16,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->registerWhatsAppProvider();
+        $this->registerAiProvider();
     }
 
     /**
@@ -41,6 +45,23 @@ class AppServiceProvider extends ServiceProvider
             return $provider === 'meta'
                 ? new MetaWhatsAppProvider
                 : new FakeWhatsAppProvider;
+        });
+    }
+
+    /**
+     * Bind App\Contracts\AiProviderContract ke implementasi sesuai services.ai.provider.
+     * Sama seperti registerWhatsAppProvider() — menolak boot kalau production+fake.
+     */
+    private function registerAiProvider(): void
+    {
+        $provider = config('services.ai.provider', 'fake');
+
+        ProviderGuard::assertNotFakeInProduction($this->app->environment(), $provider, 'AI');
+
+        $this->app->singleton(AiProviderContract::class, function () use ($provider) {
+            return $provider === 'openai'
+                ? new OpenAiProvider
+                : new FakeAiProvider;
         });
     }
 }

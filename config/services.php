@@ -51,4 +51,12 @@ return [
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
     ],
 
+    // OpenAI Conversation Engine (Fase 4). Sama seperti whatsapp di atas — 'provider' HARUS
+    // 'fake' kecuali production dengan kredensial asli, ditegakkan App\Support\ProviderGuard.
+    'ai' => [
+        'provider' => env('AI_PROVIDER', 'fake'),
+        'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+    ],
+
 ];
