@@ -41,4 +41,14 @@ return [
         'secret' => env('LEAD_INTAKE_SECRET'),
     ],
 
+    // WhatsApp Business Cloud API (Fase 3). 'provider' HARUS 'fake' kecuali di production
+    // dengan kredensial asli sudah diisi — ditegakkan App\Support\ProviderGuard saat boot.
+    'whatsapp' => [
+        'provider' => env('WHATSAPP_PROVIDER', 'fake'),
+        'token' => env('WHATSAPP_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'api_version' => env('WHATSAPP_API_VERSION', 'v20.0'),
+        'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+    ],
+
 ];

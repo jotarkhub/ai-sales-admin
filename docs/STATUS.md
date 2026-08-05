@@ -35,13 +35,14 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | Audit log service | `CI_TEST_PASSED` | Sama seperti di atas — `App\Services\Audit\AuditLogService`, dipakai di login/logout, teruji |
 | Business Configuration module | `LOCAL_TEST_PASSED` | `php artisan test`: 20 passed (72 assertions) di komputer user. Menunggu konfirmasi CI (commit `fd4df06`) untuk naik ke `CI_TEST_PASSED` |
 | Lead Intake endpoint | `CI_TEST_PASSED` | Run [#9](https://github.com/jotarkhub/ai-sales-admin/actions) commit `e3f3f09` hijau. Sempat gagal di CI (run #8, `ad8f2b3`): `assertSame` pada kolom JSON gagal di MySQL karena urutan key tidak dijamin sama (beda dari SQLite) — sudah diperbaiki jadi `assertEquals` |
-| WhatsApp integration | belum dimulai | `CREDENTIAL_REQUIRED` (token/phone number ID belum ada) |
+| WhatsApp — Provider Abstraction (fondasi Fase 3) | `IMPLEMENTED_UNVERIFIED` | `WhatsAppProviderContract`, `FakeWhatsAppProvider` (dipakai testing), `MetaWhatsAppProvider` (panggilan HTTP nyata ke Graph API, diuji dengan `Http::fake()` — bukan cuma placeholder), `ProviderGuard` (aplikasi tolak boot kalau production+fake). 10 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
+| WhatsApp — kirim pesan sungguhan | belum dimulai | `CREDENTIAL_REQUIRED` (token/phone number ID Meta belum ada — provider abstraction di atas sudah siap dipakai begitu kredensial tersedia) |
 | OpenAI / Conversation Engine | belum dimulai | `CREDENTIAL_REQUIRED` (API key belum ada) |
 | Google Apps Script (Fase 6) | `IMPLEMENTED_UNVERIFIED` | `apps-script/LeadIntake.gs` + `apps-script/README.md` ditulis lengkap (HMAC signature, idempotency lewat sheet log, retry, testConfiguration(), dukungan CUSTOM_FIELD_MAP). **Menunggu Anda buat Google Form + pasang script + jalankan testConfiguration()** sesuai README |
 | Custom Lead Fields (form builder) | `CI_TEST_PASSED` | Run [#10](https://github.com/jotarkhub/ai-sales-admin/actions) commit `0e5d910` hijau. Lokal: 35 passed (133 assertions), Pint hijau |
 | Dashboard admin — Lead List & Detail (Fase 5a) | `CI_TEST_PASSED` | Run [#11](https://github.com/jotarkhub/ai-sales-admin/actions) commit `988c973` hijau. Lokal: 49 passed (174 assertions), Pint hijau |
 | Dashboard admin — Percakapan & Takeover (Fase 5b) | `CI_TEST_PASSED` | Run [#12](https://github.com/jotarkhub/ai-sales-admin/actions) commit `9048523` hijau. Lokal: 58 passed (197 assertions), Pint hijau |
-| Dashboard admin — Knowledge Base (Fase 5c) | `IMPLEMENTED_UNVERIFIED` | `KnowledgeItemPolicy`, `KnowledgeItemController` (index/store/edit/update/togglePublish), view `knowledge/index`+`edit`. Tulis/publikasi dibatasi admin/supervisor; draft tidak pernah dipakai AI (scopeUsableByAi). 7 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
+| Dashboard admin — Knowledge Base (Fase 5c) | `LOCAL_TEST_PASSED` | `php artisan test`: 65 passed (218 assertions), Pint hijau, di komputer user. Commit `c76e1cf` di-push. Menunggu konfirmasi CI untuk naik ke `CI_TEST_PASSED` |
 
 ## Provider Fake — Aturan Keras
 
