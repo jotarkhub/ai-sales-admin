@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BusinessConfigurationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadFieldDefinitionController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,5 +37,12 @@ Route::middleware('auth')->group(function () {
         Route::get('pengaturan/field-lead/{leadField}/edit', [LeadFieldDefinitionController::class, 'edit'])->name('lead-fields.edit');
         Route::put('pengaturan/field-lead/{leadField}', [LeadFieldDefinitionController::class, 'update'])->name('lead-fields.update');
         Route::patch('pengaturan/field-lead/{leadField}/toggle', [LeadFieldDefinitionController::class, 'toggleActive'])->name('lead-fields.toggle');
+
+        // Dashboard lead (Fase 5) — daftar, detail, ubah status. Konfirmasi "won" otorisasinya
+        // lebih ketat (admin/supervisor), ditegakkan di LeadPolicy::confirmWon, bukan di sini.
+        Route::get('leads', [LeadController::class, 'index'])->name('leads.index');
+        Route::get('leads/{lead}', [LeadController::class, 'show'])->name('leads.show');
+        Route::patch('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status.update');
+        Route::post('leads/{lead}/confirm-won', [LeadController::class, 'confirmWon'])->name('leads.confirm-won');
     });
 });

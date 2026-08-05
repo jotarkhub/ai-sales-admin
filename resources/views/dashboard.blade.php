@@ -13,9 +13,11 @@
     <p><span class="badge">Data Pengujian</span></p>
     <h1>Selamat datang, {{ $user->name }}</h1>
     <p>Peran: {{ $user->roles->pluck('name')->join(', ') ?: 'Belum ada peran' }}</p>
-    <p>Dashboard lengkap (lead, percakapan, follow-up, dst.) belum dibangun — ini halaman
-       placeholder untuk membuktikan login &amp; role-based authorization berfungsi (Fase 2).
-       Lihat <code>docs/STATUS.md</code>.</p>
+    <p>
+        <a href="{{ route('leads.index') }}">Daftar Lead</a>
+        &middot; <a href="{{ route('business.edit') }}">Konfigurasi Bisnis</a>
+        &middot; <a href="{{ route('lead-fields.index') }}">Field Custom Lead</a>
+    </p>
     <form method="POST" action="{{ route('logout') }}">
         @csrf
         <button type="submit">Keluar</button>

@@ -38,8 +38,10 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | WhatsApp integration | belum dimulai | `CREDENTIAL_REQUIRED` (token/phone number ID belum ada) |
 | OpenAI / Conversation Engine | belum dimulai | `CREDENTIAL_REQUIRED` (API key belum ada) |
 | Google Apps Script (Fase 6) | `IMPLEMENTED_UNVERIFIED` | `apps-script/LeadIntake.gs` + `apps-script/README.md` ditulis lengkap (HMAC signature, idempotency lewat sheet log, retry, testConfiguration(), dukungan CUSTOM_FIELD_MAP). **Menunggu Anda buat Google Form + pasang script + jalankan testConfiguration()** sesuai README |
-| Custom Lead Fields (form builder) | `IMPLEMENTED_UNVERIFIED` | 2 tabel baru (`lead_field_definitions`, `lead_field_values`), form builder admin (`Pengaturan > Field Custom Lead`), validasi dinamis field wajib di Lead Intake, enkripsi khusus field sensitif (NIK/KTP) lewat `LeadFieldValue::makeFor()`, redaksi otomatis di audit log. 9 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
-| Dashboard admin | belum dimulai | — |
+| Custom Lead Fields (form builder) | `CI_TEST_PASSED` | Run [#10](https://github.com/jotarkhub/ai-sales-admin/actions) commit `0e5d910` hijau. Lokal: 35 passed (133 assertions), Pint hijau |
+| Dashboard admin — Lead List & Detail (Fase 5a) | `IMPLEMENTED_UNVERIFIED` | `LeadPolicy`, `LeadController` (index/show/updateStatus/confirmWon), view `leads/index`+`leads/show`. Ubah status umum vs konfirmasi "won" sengaja dipisah (endpoint & otorisasi beda) — AI/staf biasa tidak bisa set won, hanya admin/supervisor lewat aksi eksplisit. 14 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
+| Dashboard admin — Percakapan & Takeover (Fase 5b) | belum dimulai | — |
+| Dashboard admin — Knowledge Base (Fase 5c) | belum dimulai | — |
 
 ## Provider Fake — Aturan Keras
 
