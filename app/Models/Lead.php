@@ -106,4 +106,9 @@ class Lead extends Model
     {
         return $this->status === LeadStatus::OptOut || $this->opted_out_at !== null;
     }
+
+    public function fieldValues(): HasMany
+    {
+        return $this->hasMany(LeadFieldValue::class);
+    }
 }

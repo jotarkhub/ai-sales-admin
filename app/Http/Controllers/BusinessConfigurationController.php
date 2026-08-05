@@ -2,25 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
 use App\Http\Requests\Business\UpdateBusinessRequest;
-use App\Models\Business;
 use App\Services\Audit\AuditLogService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 
 class BusinessConfigurationController extends Controller
 {
-    public function __construct(private readonly AuditLogService $auditLog) {}
+    use ResolvesCurrentBusiness;
 
-    /**
-     * MVP: satu business aktif. Resolver ini adalah satu-satunya tempat yang tahu cara
-     * menentukan "bisnis aktif saat ini" — kalau nanti multi-tenant, cukup ganti di sini
-     * (mis. dari business_id di session admin yang login).
-     */
-    private function currentBusiness(): Business
-    {
-        return Business::query()->where('is_active', true)->firstOrFail();
-    }
+    public function __construct(private readonly AuditLogService $auditLog) {}
 
     public function edit(): View
     {

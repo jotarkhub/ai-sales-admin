@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Lead;
 
+use App\Models\Business;
 use App\Services\Lead\PhoneNumberNormalizer;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -37,6 +39,42 @@ class LeadIntakeRequest extends FormRequest
             'source' => ['nullable', 'string', 'max:100'],
             'consent_whatsapp' => ['required', 'boolean'],
             'raw_answers' => ['required', 'array'],
+
+            // Jawaban field custom (form builder per bisnis) — lihat App\Models\LeadFieldDefinition.
+            'custom_answers' => ['sometimes', 'array'],
         ];
+    }
+
+    /**
+     * Field custom yang wajib (lead_field_definitions.is_required) divalidasi di sini karena
+     * daftarnya dinamis per bisnis (tersimpan di database), bukan aturan statis.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $business = Business::query()->where('is_active', true)->first();
+
+            if (! $business) {
+                return;
+            }
+
+            $customAnswers = (array) $this->input('custom_answers', []);
+
+            $requiredFields = $business->leadFieldDefinitions()
+                ->active()
+                ->where('is_required', true)
+                ->get();
+
+            foreach ($requiredFields as $field) {
+                $value = $customAnswers[$field->key] ?? null;
+
+                if ($value === null || $value === '') {
+                    $validator->errors()->add(
+                        "custom_answers.{$field->key}",
+                        "Field \"{$field->label}\" wajib diisi."
+                    );
+                }
+            }
+        });
     }
 }

@@ -73,4 +73,9 @@ class Business extends Model
     {
         return $this->hasMany(Tag::class);
     }
+
+    public function leadFieldDefinitions(): HasMany
+    {
+        return $this->hasMany(LeadFieldDefinition::class);
+    }
 }

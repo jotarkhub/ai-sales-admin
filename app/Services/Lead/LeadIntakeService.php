@@ -7,6 +7,7 @@ use App\Models\Business;
 use App\Models\FollowUp;
 use App\Models\Lead;
 use App\Models\LeadActivity;
+use App\Models\LeadFieldValue;
 use App\Models\LeadFormSubmission;
 use App\Models\LeadSource;
 use App\Models\Product;
@@ -91,6 +92,8 @@ class LeadIntakeService
                 'processed_at' => now(),
             ]);
 
+            $customFieldsSaved = $this->storeCustomFieldValues($business, $lead, $data['custom_answers'] ?? []);
+
             LeadActivity::create([
                 'business_id' => $business->id,
                 'lead_id' => $lead->id,
@@ -102,8 +105,20 @@ class LeadIntakeService
             $this->auditLog->recordSystem(
                 action: 'lead.created',
                 subject: $lead,
+                // Sengaja TIDAK menyertakan custom_answers di sini — bisa berisi data sensitif
+                // (NIK/KTP dkk.) yang tidak boleh mampir ke audit_logs walau di kolom "after".
                 after: $lead->only(['status', 'phone_number', 'name', 'consent_whatsapp']),
             );
+
+            if ($customFieldsSaved > 0) {
+                LeadActivity::create([
+                    'business_id' => $business->id,
+                    'lead_id' => $lead->id,
+                    'type' => 'custom_fields_saved',
+                    'description' => $customFieldsSaved.' field custom tersimpan (lihat detail di halaman lead, bukan di log ini — field sensitif tidak ditampilkan mentah di aktivitas).',
+                    'actor_type' => 'system',
+                ]);
+            }
 
             $whatsappScheduled = false;
 
@@ -138,5 +153,38 @@ class LeadIntakeService
 
             return new LeadIntakeResult($lead, wasDuplicate: false, whatsappScheduled: $whatsappScheduled);
         });
+    }
+
+    /**
+     * Simpan jawaban field custom (form builder). Field sensitif (is_sensitive) otomatis
+     * dienkripsi lewat LeadFieldValue::makeFor() — lihat App\Models\LeadFieldValue.
+     * Field yang tidak dikirim atau kosong dilewati (bukan error, kecuali wajib — sudah
+     * divalidasi di LeadIntakeRequest sebelum service ini dipanggil).
+     */
+    private function storeCustomFieldValues(Business $business, Lead $lead, array $customAnswers): int
+    {
+        if (empty($customAnswers)) {
+            return 0;
+        }
+
+        $definitions = $business->leadFieldDefinitions()->active()->get()->keyBy('key');
+        $saved = 0;
+
+        foreach ($customAnswers as $key => $rawValue) {
+            $definition = $definitions->get($key);
+
+            if (! $definition || $rawValue === null || $rawValue === '') {
+                continue;
+            }
+
+            LeadFieldValue::create(array_merge(
+                ['lead_id' => $lead->id, 'lead_field_definition_id' => $definition->id],
+                LeadFieldValue::makeFor($definition, (string) $rawValue),
+            ));
+
+            $saved++;
+        }
+
+        return $saved;
     }
 }

@@ -443,6 +443,26 @@ stateDiagram-v2
     end note
 ```
 
+## 8b. Custom Lead Fields (Form Builder)
+
+Ditambahkan setelah kebutuhan klien konsultan LPK/pembiayaan muncul — beberapa bisnis butuh
+field lead yang sama sekali berbeda dari sales umum (mis. NIK/KTP pemohon, data orang tua, data
+penjamin). Alih-alih hardcode field-field itu ke tabel `leads`, disediakan dua tabel tambahan:
+
+- `lead_field_definitions` (business_id, key, label, field_type, is_required, is_sensitive,
+  options, sort_order, is_active) — dikelola admin lewat form builder di
+  `Pengaturan > Field Custom Lead`.
+- `lead_field_values` (lead_id, lead_field_definition_id, value, value_encrypted) — jawaban per
+  lead. Field yang `is_sensitive=true` (mis. NIK/KTP) disimpan HANYA di `value_encrypted`
+  (lewat `Crypt::encryptString`), kolom `value` plaintext dibiarkan kosong. Lihat
+  `App\Models\LeadFieldValue::makeFor()`.
+
+Nilai field sensitif tidak pernah ditulis ke `audit_logs` — hanya jumlah field yang tersimpan
+yang dicatat di `lead_activities` (type `custom_fields_saved`).
+
+Google Apps Script mengirim jawaban custom lewat `custom_answers: {key: value}` di payload
+intake, dipetakan dari `CONFIG.CUSTOM_FIELD_MAP` (lihat `apps-script/README.md`).
+
 ## 9. Daftar Environment Variables
 
 | Variable | Wajib di | Keterangan |

@@ -5,8 +5,10 @@ namespace Tests\Feature\Api;
 use App\Models\AuditLog;
 use App\Models\Business;
 use App\Models\Lead;
+use App\Models\LeadFieldDefinition;
 use App\Models\LeadFormSubmission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
@@ -184,5 +186,88 @@ class LeadIntakeTest extends TestCase
         $response = $this->postSigned('/api/v1/leads/intake', $payload);
 
         $response->assertStatus(503);
+    }
+
+    public function test_field_custom_wajib_yang_kosong_ditolak_422(): void
+    {
+        $business = Business::where('is_active', true)->firstOrFail();
+        LeadFieldDefinition::create([
+            'business_id' => $business->id,
+            'key' => 'no_ktp_pemohon',
+            'label' => 'No KTP Pemohon',
+            'field_type' => 'nik',
+            'is_required' => true,
+            'is_sensitive' => true,
+            'is_active' => true,
+        ]);
+
+        $payload = $this->validPayload(['custom_answers' => []]);
+
+        $response = $this->postSigned('/api/v1/leads/intake', $payload);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('custom_answers.no_ktp_pemohon');
+        $this->assertDatabaseMissing('leads', ['external_submission_id' => $payload['external_submission_id']]);
+    }
+
+    public function test_field_custom_sensitif_disimpan_terenkripsi(): void
+    {
+        $business = Business::where('is_active', true)->firstOrFail();
+        $field = LeadFieldDefinition::create([
+            'business_id' => $business->id,
+            'key' => 'no_ktp_pemohon',
+            'label' => 'No KTP Pemohon',
+            'field_type' => 'nik',
+            'is_required' => true,
+            'is_sensitive' => true,
+            'is_active' => true,
+        ]);
+
+        $payload = $this->validPayload(['custom_answers' => ['no_ktp_pemohon' => '3201019001010001']]);
+
+        $response = $this->postSigned('/api/v1/leads/intake', $payload);
+
+        $response->assertCreated();
+
+        $lead = Lead::where('external_submission_id', $payload['external_submission_id'])->firstOrFail();
+        $storedValue = $lead->fieldValues()->where('lead_field_definition_id', $field->id)->firstOrFail();
+
+        // Kolom "value" plaintext harus kosong untuk field sensitif — nilai asli hanya lewat displayValue().
+        $this->assertNull($storedValue->value);
+        $this->assertNotNull($storedValue->value_encrypted);
+        $this->assertNotSame('3201019001010001', $storedValue->value_encrypted);
+        $this->assertSame('3201019001010001', $storedValue->displayValue());
+
+        // Pastikan juga nilai mentahnya tidak pernah nyasar ke audit_logs.
+        $auditRows = DB::table('audit_logs')->where('subject_id', $lead->id)->where('subject_type', Lead::class)->get();
+        foreach ($auditRows as $row) {
+            $this->assertStringNotContainsString('3201019001010001', (string) $row->after);
+            $this->assertStringNotContainsString('3201019001010001', (string) $row->before);
+        }
+    }
+
+    public function test_field_custom_tidak_sensitif_disimpan_plaintext(): void
+    {
+        $business = Business::where('is_active', true)->firstOrFail();
+        $field = LeadFieldDefinition::create([
+            'business_id' => $business->id,
+            'key' => 'domisili',
+            'label' => 'Domisili',
+            'field_type' => 'text',
+            'is_required' => false,
+            'is_sensitive' => false,
+            'is_active' => true,
+        ]);
+
+        $payload = $this->validPayload(['custom_answers' => ['domisili' => 'Bandung']]);
+
+        $response = $this->postSigned('/api/v1/leads/intake', $payload);
+        $response->assertCreated();
+
+        $lead = Lead::where('external_submission_id', $payload['external_submission_id'])->firstOrFail();
+        $storedValue = $lead->fieldValues()->where('lead_field_definition_id', $field->id)->firstOrFail();
+
+        $this->assertSame('Bandung', $storedValue->value);
+        $this->assertNull($storedValue->value_encrypted);
     }
 }

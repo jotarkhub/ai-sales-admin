@@ -34,10 +34,11 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | Auth & authorization (role-based) | `CI_TEST_PASSED` | Run [#6](https://github.com/jotarkhub/ai-sales-admin/actions/runs/) commit `1af8e3a` hijau. Login session-based + rate limit 5x/menit, middleware `role:` |
 | Audit log service | `CI_TEST_PASSED` | Sama seperti di atas — `App\Services\Audit\AuditLogService`, dipakai di login/logout, teruji |
 | Business Configuration module | `LOCAL_TEST_PASSED` | `php artisan test`: 20 passed (72 assertions) di komputer user. Menunggu konfirmasi CI (commit `fd4df06`) untuk naik ke `CI_TEST_PASSED` |
-| Lead Intake endpoint | `LOCAL_TEST_PASSED` | `php artisan test`: 27 passed (102 assertions) di komputer user, termasuk 7 test `LeadIntakeTest`. Menunggu konfirmasi CI (commit `ad8f2b3`) |
+| Lead Intake endpoint | `CI_TEST_PASSED` | Run [#9](https://github.com/jotarkhub/ai-sales-admin/actions) commit `e3f3f09` hijau. Sempat gagal di CI (run #8, `ad8f2b3`): `assertSame` pada kolom JSON gagal di MySQL karena urutan key tidak dijamin sama (beda dari SQLite) — sudah diperbaiki jadi `assertEquals` |
 | WhatsApp integration | belum dimulai | `CREDENTIAL_REQUIRED` (token/phone number ID belum ada) |
 | OpenAI / Conversation Engine | belum dimulai | `CREDENTIAL_REQUIRED` (API key belum ada) |
-| Google Apps Script | belum dimulai | `CREDENTIAL_REQUIRED` (belum ada Google Form/Sheet target) |
+| Google Apps Script (Fase 6) | `IMPLEMENTED_UNVERIFIED` | `apps-script/LeadIntake.gs` + `apps-script/README.md` ditulis lengkap (HMAC signature, idempotency lewat sheet log, retry, testConfiguration(), dukungan CUSTOM_FIELD_MAP). **Menunggu Anda buat Google Form + pasang script + jalankan testConfiguration()** sesuai README |
+| Custom Lead Fields (form builder) | `IMPLEMENTED_UNVERIFIED` | 2 tabel baru (`lead_field_definitions`, `lead_field_values`), form builder admin (`Pengaturan > Field Custom Lead`), validasi dinamis field wajib di Lead Intake, enkripsi khusus field sensitif (NIK/KTP) lewat `LeadFieldValue::makeFor()`, redaksi otomatis di audit log. 9 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
 | Dashboard admin | belum dimulai | — |
 
 ## Provider Fake — Aturan Keras

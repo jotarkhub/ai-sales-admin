@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BusinessConfigurationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LeadFieldDefinitionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,5 +29,12 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin,supervisor,agent')->group(function () {
         Route::get('pengaturan/bisnis', [BusinessConfigurationController::class, 'edit'])->name('business.edit');
         Route::put('pengaturan/bisnis', [BusinessConfigurationController::class, 'update'])->name('business.update');
+
+        // Form builder — field custom per bisnis (mis. No KTP, Nama Bapak, dst. untuk klien pembiayaan).
+        Route::get('pengaturan/field-lead', [LeadFieldDefinitionController::class, 'index'])->name('lead-fields.index');
+        Route::post('pengaturan/field-lead', [LeadFieldDefinitionController::class, 'store'])->name('lead-fields.store');
+        Route::get('pengaturan/field-lead/{leadField}/edit', [LeadFieldDefinitionController::class, 'edit'])->name('lead-fields.edit');
+        Route::put('pengaturan/field-lead/{leadField}', [LeadFieldDefinitionController::class, 'update'])->name('lead-fields.update');
+        Route::patch('pengaturan/field-lead/{leadField}/toggle', [LeadFieldDefinitionController::class, 'toggleActive'])->name('lead-fields.toggle');
     });
 });
