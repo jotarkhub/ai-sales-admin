@@ -12,14 +12,17 @@ class WhatsAppWebhookController extends Controller
 {
     /**
      * Handshake verifikasi awal saat webhook didaftarkan di Meta for Developers.
-     * Meta kirim GET dengan query hub.mode/hub.verify_token/hub.challenge; kita wajib
-     * membalas persis nilai hub.challenge kalau verify_token cocok.
+     * Meta kirim GET dengan query hub.mode/hub.verify_token/hub.challenge — TAPI PHP
+     * otomatis mengganti titik di nama parameter query jadi underscore saat parsing
+     * superglobal $_GET, jadi yang benar-benar diterima di sini adalah hub_mode/
+     * hub_verify_token/hub_challenge (perilaku PHP, bukan Laravel). Kita wajib membalas
+     * persis nilai challenge kalau verify_token cocok.
      */
     public function verify(Request $request): Response
     {
-        $mode = $request->query('hub.mode');
-        $token = (string) $request->query('hub.verify_token', '');
-        $challenge = (string) $request->query('hub.challenge', '');
+        $mode = $request->query('hub_mode');
+        $token = (string) $request->query('hub_verify_token', '');
+        $challenge = (string) $request->query('hub_challenge', '');
         $expected = config('services.whatsapp.verify_token');
 
         if ($mode === 'subscribe' && filled($expected) && hash_equals((string) $expected, $token)) {
