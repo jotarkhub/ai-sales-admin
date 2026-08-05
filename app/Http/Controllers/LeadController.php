@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ConversationStatus;
 use App\Enums\LeadStatus;
 use App\Http\Controllers\Concerns\ResolvesCurrentBusiness;
 use App\Http\Requests\Lead\UpdateLeadStatusRequest;
+use App\Models\Conversation;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Services\Audit\AuditLogService;
@@ -109,6 +111,8 @@ class LeadController extends Controller
             'metadata' => ['from' => $before['status'], 'to' => $newStatus->value],
         ]);
 
+        $this->closeConversationsIfTerminal($lead, $newStatus);
+
         return redirect()->route('leads.show', $lead)->with('status', 'Status lead diperbarui.');
     }
 
@@ -150,6 +154,43 @@ class LeadController extends Controller
             'actor_id' => $request->user()->id,
         ]);
 
+        $this->closeConversationsIfTerminal($lead, LeadStatus::Won);
+
         return redirect()->route('leads.show', $lead)->with('status', 'Lead dikonfirmasi sebagai won.');
+    }
+
+    /**
+     * Tegakkan state machine di docs/ARCHITECTURE.md #8: begitu lead mencapai status akhir
+     * (won/lost/opt_out), semua percakapan yang masih aktif WAJIB ditutup — AI atau admin
+     * tidak boleh terus membalas di percakapan yang leadnya sudah selesai.
+     */
+    private function closeConversationsIfTerminal(Lead $lead, LeadStatus $newStatus): void
+    {
+        if (! in_array($newStatus, LeadStatus::terminal(), true)) {
+            return;
+        }
+
+        $lead->conversations()
+            ->where('status', '!=', ConversationStatus::Closed->value)
+            ->get()
+            ->each(function (Conversation $conversation) {
+                $before = ['status' => $conversation->status->value];
+                $conversation->update(['status' => ConversationStatus::Closed]);
+
+                $this->auditLog->recordSystem(
+                    action: 'conversation.auto_closed',
+                    subject: $conversation,
+                    before: $before,
+                    after: ['status' => ConversationStatus::Closed->value],
+                );
+
+                LeadActivity::create([
+                    'business_id' => $conversation->business_id,
+                    'lead_id' => $conversation->lead_id,
+                    'type' => 'conversation_auto_closed',
+                    'description' => 'Percakapan otomatis ditutup karena lead mencapai status akhir.',
+                    'actor_type' => 'system',
+                ]);
+            });
     }
 }

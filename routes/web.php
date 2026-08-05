@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\BusinessConfigurationController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadFieldDefinitionController;
@@ -44,5 +45,10 @@ Route::middleware('auth')->group(function () {
         Route::get('leads/{lead}', [LeadController::class, 'show'])->name('leads.show');
         Route::patch('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status.update');
         Route::post('leads/{lead}/confirm-won', [LeadController::class, 'confirmWon'])->name('leads.confirm-won');
+
+        // Percakapan & human takeover (Fase 5b). Lihat docs/ARCHITECTURE.md #8 — state machine.
+        Route::get('percakapan/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
+        Route::post('percakapan/{conversation}/takeover', [ConversationController::class, 'takeover'])->name('conversations.takeover');
+        Route::post('percakapan/{conversation}/release', [ConversationController::class, 'release'])->name('conversations.release');
     });
 });

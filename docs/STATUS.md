@@ -39,8 +39,8 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | OpenAI / Conversation Engine | belum dimulai | `CREDENTIAL_REQUIRED` (API key belum ada) |
 | Google Apps Script (Fase 6) | `IMPLEMENTED_UNVERIFIED` | `apps-script/LeadIntake.gs` + `apps-script/README.md` ditulis lengkap (HMAC signature, idempotency lewat sheet log, retry, testConfiguration(), dukungan CUSTOM_FIELD_MAP). **Menunggu Anda buat Google Form + pasang script + jalankan testConfiguration()** sesuai README |
 | Custom Lead Fields (form builder) | `CI_TEST_PASSED` | Run [#10](https://github.com/jotarkhub/ai-sales-admin/actions) commit `0e5d910` hijau. Lokal: 35 passed (133 assertions), Pint hijau |
-| Dashboard admin — Lead List & Detail (Fase 5a) | `IMPLEMENTED_UNVERIFIED` | `LeadPolicy`, `LeadController` (index/show/updateStatus/confirmWon), view `leads/index`+`leads/show`. Ubah status umum vs konfirmasi "won" sengaja dipisah (endpoint & otorisasi beda) — AI/staf biasa tidak bisa set won, hanya admin/supervisor lewat aksi eksplisit. 14 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
-| Dashboard admin — Percakapan & Takeover (Fase 5b) | belum dimulai | — |
+| Dashboard admin — Lead List & Detail (Fase 5a) | `LOCAL_TEST_PASSED` | `php artisan test`: 49 passed (174 assertions), Pint hijau, di komputer user. Commit `988c973` di-push. Menunggu konfirmasi CI untuk naik ke `CI_TEST_PASSED` |
+| Dashboard admin — Percakapan & Takeover (Fase 5b) | `IMPLEMENTED_UNVERIFIED` | `ConversationPolicy`, `ConversationController` (show/takeover/release), view `conversations/show`. Take over otomatis klaim eskalasi terbuka; lead mencapai status akhir (won/lost/opt_out) otomatis menutup percakapan aktif (state machine #8). 11 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
 | Dashboard admin — Knowledge Base (Fase 5c) | belum dimulai | — |
 
 ## Provider Fake — Aturan Keras

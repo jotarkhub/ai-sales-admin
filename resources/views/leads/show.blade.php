@@ -115,6 +115,7 @@
             <p>
                 <span class="badge">{{ $conversation->status->label() }}</span>
                 {{ $conversation->channel }} — pesan terakhir: {{ $conversation->last_message_at?->format('d M Y H:i') ?? 'belum ada' }}
+                — <a href="{{ route('conversations.show', $conversation) }}">Buka Percakapan</a>
             </p>
         @empty
             <p>Belum ada percakapan (menunggu integrasi WhatsApp Fase 3).</p>
