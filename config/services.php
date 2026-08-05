@@ -49,6 +49,10 @@ return [
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'api_version' => env('WHATSAPP_API_VERSION', 'v20.0'),
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+        // App Secret dari Meta for Developers — dipakai memverifikasi X-Hub-Signature-256 di
+        // webhook masuk (App\Http\Middleware\VerifyWhatsAppWebhookSignature). BEDA dari
+        // WHATSAPP_TOKEN (access token) di atas.
+        'app_secret' => env('WHATSAPP_APP_SECRET'),
     ],
 
     // OpenAI Conversation Engine (Fase 4). Sama seperti whatsapp di atas — 'provider' HARUS

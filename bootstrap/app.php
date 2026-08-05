@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\VerifyLeadIntakeSignature;
+use App\Http\Middleware\VerifyWhatsAppWebhookSignature;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
             'verify.lead_intake_signature' => VerifyLeadIntakeSignature::class,
+            'verify.whatsapp_webhook_signature' => VerifyWhatsAppWebhookSignature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -14,6 +14,8 @@ class LeadSource extends Model
 
     public const MANUAL = 'manual';
 
+    public const WHATSAPP_INBOUND = 'whatsapp_inbound';
+
     protected $fillable = ['name', 'slug'];
 
     public function leads(): HasMany
