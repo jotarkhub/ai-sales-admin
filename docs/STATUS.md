@@ -33,19 +33,51 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 | Migration & model tabel inti (24 tabel) | `CI_TEST_PASSED` | Lokal: 3 passed/30 assertions. CI (MySQL 8.0): migrate:fresh + test + pint hijau di run #5. Sempat gagal 2x: (1) nama unique constraint `integration_credentials` >64 char (batas identifier MySQL, tidak ketahuan di SQLite lokal), (2) Pint fully-qualified-class-name di test — keduanya sudah diperbaiki |
 | Auth & authorization (role-based) | `CI_TEST_PASSED` | Run [#6](https://github.com/jotarkhub/ai-sales-admin/actions/runs/) commit `1af8e3a` hijau. Login session-based + rate limit 5x/menit, middleware `role:` |
 | Audit log service | `CI_TEST_PASSED` | Sama seperti di atas — `App\Services\Audit\AuditLogService`, dipakai di login/logout, teruji |
-| Business Configuration module | `LOCAL_TEST_PASSED` | `php artisan test`: 20 passed (72 assertions) di komputer user. Menunggu konfirmasi CI (commit `fd4df06`) untuk naik ke `CI_TEST_PASSED` |
+| Business Configuration module | `CI_TEST_PASSED` | Run [#7](https://github.com/jotarkhub/ai-sales-admin/actions) commit `fd4df06` hijau. Lokal: 20 passed (72 assertions) |
 | Lead Intake endpoint | `CI_TEST_PASSED` | Run [#9](https://github.com/jotarkhub/ai-sales-admin/actions) commit `e3f3f09` hijau. Sempat gagal di CI (run #8, `ad8f2b3`): `assertSame` pada kolom JSON gagal di MySQL karena urutan key tidak dijamin sama (beda dari SQLite) — sudah diperbaiki jadi `assertEquals` |
 | WhatsApp — Provider Abstraction (fondasi Fase 3) | `CI_TEST_PASSED` | Run [#14](https://github.com/jotarkhub/ai-sales-admin/actions) commit `0f95213` hijau. Lokal: 74 passed (236 assertions), Pint hijau |
 | WhatsApp — FollowUp Dispatch (kirim follow-up jatuh tempo) | `CI_TEST_PASSED` | Run [#16](https://github.com/jotarkhub/ai-sales-admin/actions) commit `89120bd` hijau. Lokal: 89 passed (281 assertions), Pint hijau |
 | WhatsApp — kirim pesan sungguhan ke Meta | belum bisa | `CREDENTIAL_REQUIRED` (token/phone number ID Meta belum ada — begitu tersedia, tinggal ganti `WHATSAPP_PROVIDER=meta`, kode dispatch di atas tidak perlu diubah) |
 | AI — Provider Abstraction (fondasi Fase 4) | `CI_TEST_PASSED` | Run [#15](https://github.com/jotarkhub/ai-sales-admin/actions) commit `9b87b62` hijau. Lokal: 81 passed (252 assertions), Pint hijau |
 | WhatsApp — Webhook Receiver (Fase 4a, terima pesan/status masuk) | `CI_TEST_PASSED` | Run [#18](https://github.com/jotarkhub/ai-sales-admin/actions) commit `0365b02` hijau. Lokal: 100 passed (307 assertions), Pint hijau. Sempat gagal 1x: handshake verifikasi baca `hub.mode` dkk. padahal PHP mengganti titik jadi underscore di query string (`hub_mode`) — sudah diperbaiki |
-| AI — Conversation Engine (Fase 4b: prompt building, knowledge retrieval, guardrail, eskalasi, balas otomatis) | `IMPLEMENTED_UNVERIFIED` | `ConversationContextBuilder` (system prompt + knowledge base published + riwayat pesan), `AiStructuredReply` (parse & validasi skema output AI — JSON wajib, gagal parse = otomatis eskalasi), `ConversationGuardrailService` (cek escalation_required & ambang confidence dari `Business::ai_authority_limit`), `ConversationEngine` (orkestrator: panggil AI -> catat `ai_runs` -> guardrail -> kirim WhatsApp atau buat `escalations`+`tickets`+set `human_takeover`). AI TIDAK PERNAH membalas selama status bukan `ai_active` — dicek ulang di sini, bukan cuma percaya caller. Terhubung otomatis dari webhook (Fase 4a) setelah pesan inbound tersimpan. Scoring lead (`lead_scores`) SENGAJA belum disentuh di modul ini — akan jadi peningkatan terpisah supaya tidak dibangun setengah-setengah. 7 test baru. Lolos `php -l`, **menunggu `php artisan test` sungguhan** |
+| AI — Conversation Engine (Fase 4b: prompt building, knowledge retrieval, guardrail, eskalasi, balas otomatis) | `CI_TEST_PASSED` | `ConversationContextBuilder` (system prompt + knowledge base published + riwayat pesan), `AiStructuredReply` (parse & validasi skema output AI — JSON wajib, gagal parse = otomatis eskalasi), `ConversationGuardrailService` (cek escalation_required & ambang confidence dari `Business::ai_authority_limit`), `ConversationEngine` (orkestrator: panggil AI -> catat `ai_runs` -> guardrail -> kirim WhatsApp atau buat `escalations`+`tickets`+set `human_takeover`). AI TIDAK PERNAH membalas selama status bukan `ai_active` — dicek ulang di sini, bukan cuma percaya caller. Terhubung otomatis dari webhook (Fase 4a) setelah pesan inbound tersimpan. Scoring lead (`lead_scores`) SENGAJA belum disentuh di modul ini — akan jadi peningkatan terpisah supaya tidak dibangun setengah-setengah. 7 test baru. Run [#19](https://github.com/jotarkhub/ai-sales-admin/actions) commit `5f57c19` hijau. Lokal: 107 passed (328 assertions), Pint hijau |
 | Google Apps Script (Fase 6) | `IMPLEMENTED_UNVERIFIED` | `apps-script/LeadIntake.gs` + `apps-script/README.md` ditulis lengkap (HMAC signature, idempotency lewat sheet log, retry, testConfiguration(), dukungan CUSTOM_FIELD_MAP). **Menunggu Anda buat Google Form + pasang script + jalankan testConfiguration()** sesuai README |
 | Custom Lead Fields (form builder) | `CI_TEST_PASSED` | Run [#10](https://github.com/jotarkhub/ai-sales-admin/actions) commit `0e5d910` hijau. Lokal: 35 passed (133 assertions), Pint hijau |
 | Dashboard admin — Lead List & Detail (Fase 5a) | `CI_TEST_PASSED` | Run [#11](https://github.com/jotarkhub/ai-sales-admin/actions) commit `988c973` hijau. Lokal: 49 passed (174 assertions), Pint hijau |
 | Dashboard admin — Percakapan & Takeover (Fase 5b) | `CI_TEST_PASSED` | Run [#12](https://github.com/jotarkhub/ai-sales-admin/actions) commit `9048523` hijau. Lokal: 58 passed (197 assertions), Pint hijau |
 | Dashboard admin — Knowledge Base (Fase 5c) | `CI_TEST_PASSED` | Run [#13](https://github.com/jotarkhub/ai-sales-admin/actions) commit `c76e1cf` hijau. Lokal: 65 passed (218 assertions), Pint hijau |
+
+## Fase 7 — Verifikasi End-to-End
+
+`tests/Feature/EndToEnd/FullPipelineTest.php` (2 test) memverifikasi modul-modul yang sudah
+`CI_TEST_PASSED` sendiri-sendiri benar-benar nyambung kalau dipakai berurutan seperti alur
+nyata, bukan cuma lulus terisolasi:
+
+1. Form masuk (Lead Intake) -> Lead + FollowUp pending tercipta.
+2. FollowUp Dispatch mengirim pesan pembuka -> Conversation + Message pertama.
+3. Pelanggan membalas lewat webhook -> masuk ke Lead & Conversation yang SAMA (bukan duplikat).
+4. Conversation Engine otomatis membalas (guardrail lolos) -> `ai_runs` tercatat lengkap.
+5. Delivery receipt (status webhook) meng-update status pesan.
+6. Admin login, lihat lead & percakapan di dashboard.
+7. Admin ambil alih percakapan -> AI berhenti membalas (diverifikasi ulang dengan kirim pesan
+   pelanggan lagi saat human_takeover — dipastikan TIDAK ada balasan AI/ai_run baru).
+8. Admin kembalikan ke AI, lalu konfirmasi lead won -> percakapan otomatis ditutup.
+9. (Test kedua) AI mendeteksi komplain -> eskalasi + tiket terbuka -> admin bisa lihat di dashboard.
+
+**Yang SUDAH terverifikasi lewat ini:** wiring antar modul (Lead Intake, FollowUp Dispatch,
+Webhook Receiver, Conversation Engine, Dashboard) benar dan konsisten, memakai
+`FakeWhatsAppProvider` + `FakeAiProvider`.
+
+**Yang BELUM terverifikasi (`CREDENTIAL_REQUIRED`, sesuai "Aturan Keras" di bawah):**
+- Kirim/terima pesan WhatsApp sungguhan ke Meta (token & phone number ID belum ada).
+- Balasan AI dari model OpenAI asli (API key belum ada).
+- Webhook menerima payload sungguhan dari Meta (perlu server production dengan domain +
+  HTTPS publik — komputer lokal tidak bisa diakses Meta).
+- Fase 6 (Google Form klien LPK) belum dibangun manual oleh user.
+
+Begitu kredensial & hosting tersedia, ulangi alur yang sama di lingkungan staging dengan
+`WHATSAPP_PROVIDER=meta` + `AI_PROVIDER=openai` sebelum status modul terkait naik ke
+`PRODUCTION_READY`.
 
 ## Provider Fake — Aturan Keras
 
