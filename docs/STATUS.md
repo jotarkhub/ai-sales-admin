@@ -127,7 +127,7 @@ tetap satu untuk seluruh platform (bukan per klien).
   kirim pesan bisnis B), akses form (platform owner vs admin biasa), audit log tidak
   mengandung nilai asli.
 
-**Fase 8c — Webhook per bisnis: `IMPLEMENTED_UNVERIFIED`.**
+**Fase 8c — Webhook per bisnis: `CI_TEST_PASSED`.** Run [#24](https://github.com/jotarkhub/ai-sales-admin/actions) commit `db13fcf` hijau. Lokal: 124 passed (407 assertions), Pint hijau. Sempat gagal (run #23, `76e88fb`): `FullPipelineTest` cuma diberi App Secret di setUp(), padahal `WhatsAppCredentialResolver::resolveWebhookSecrets()` mensyaratkan App Secret DAN Verify Token sama-sama terisi — sudah diperbaiki.
 
 - URL webhook Meta sekarang per bisnis: `/api/v1/whatsapp/webhook/{webhook_slug}` (GET
   verify & POST receive), bukan satu URL global lagi — konsekuensi langsung dari keputusan
@@ -147,10 +147,21 @@ tetap satu untuk seluruh platform (bukan per klien).
 - Test baru: handshake per bisnis, bisnis tidak dikenal (404), kredensial webhook belum
   diisi (503), signature/App Secret bisnis lain ditolak, nomor yang sama mengirim ke dua
   webhook bisnis berbeda menghasilkan DUA lead terpisah (bukti isolasi paling langsung).
-  **Belum dijalankan user — juga perlu `php artisan migrate` untuk kolom `webhook_slug` baru.**
 
-**Fase 8d — form tambah bisnis:** `DESIGNED` (lihat rencana di riwayat percakapan), belum
-dikerjakan.
+**Fase 8d — Form Tambah Bisnis Baru: `IMPLEMENTED_UNVERIFIED`.**
+
+- `GET/POST /platform/bisnis/baru` — platform owner isi nama bisnis + zona waktu + akun admin
+  pertama (nama/email/password) dalam satu form, satu transaksi DB. Kredensial WhatsApp
+  SENGAJA tidak di form ini — diisi belakangan lewat halaman bisnis (Fase 8b) begitu App Meta
+  klien siap, supaya satu form tidak terlalu panjang.
+- Password admin awal diketik langsung oleh platform owner (bukan email verifikasi/reset
+  password — fitur itu belum ada di aplikasi ini). Password TIDAK PERNAH ditulis ke
+  audit_logs, sama seperti aturan kredensial integrasi.
+- `business.created` & `user.created_as_business_admin` tercatat di audit_logs.
+- Test paling penting: `test_dua_bisnis_yang_dibuat_lewat_form_ini_benar_benar_terisolasi` —
+  dua bisnis dibuat lewat form yang SAMA PERSIS akan dipakai nanti (bukan cuma `Business::create()`
+  langsung di test seperti test-test lain), lalu dibuktikan lead & konfigurasi bisnis satu
+  tidak pernah bocor ke admin bisnis lain.
 
 ## Provider Fake — Aturan Keras
 
