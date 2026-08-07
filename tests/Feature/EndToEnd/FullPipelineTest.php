@@ -59,6 +59,17 @@ class FullPipelineTest extends TestCase
             'encrypted_value' => self::WEBHOOK_SECRET,
             'is_active' => true,
         ]);
+
+        // resolveWebhookSecrets() mensyaratkan App Secret DAN Verify Token sama-sama terisi
+        // (lihat WhatsAppCredentialResolver) — walau test ini tidak pernah memanggil handshake
+        // GET, POST webhook tetap akan ditolak 503 kalau verify_token belum ada sama sekali.
+        IntegrationCredential::create([
+            'business_id' => $this->business->id,
+            'provider' => IntegrationCredential::PROVIDER_WHATSAPP,
+            'credential_key' => IntegrationCredential::WHATSAPP_KEY_VERIFY_TOKEN,
+            'encrypted_value' => 'e2e-verify-token-tidak-untuk-produksi',
+            'is_active' => true,
+        ]);
     }
 
     private function makeAdmin(): User
