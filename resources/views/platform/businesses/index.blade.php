@@ -28,7 +28,7 @@
 
     <table>
         <thead>
-            <tr><th>Nama Bisnis</th><th>Status</th><th>Jumlah Staf</th><th>Jumlah Lead</th><th>Zona Waktu</th></tr>
+            <tr><th>Nama Bisnis</th><th>Status</th><th>Jumlah Staf</th><th>Jumlah Lead</th><th>Zona Waktu</th><th></th></tr>
         </thead>
         <tbody>
             @forelse ($businesses as $business)
@@ -42,9 +42,10 @@
                     <td>{{ $business->users_count }}</td>
                     <td>{{ $business->leads_count }}</td>
                     <td>{{ $business->timezone ?? '—' }}</td>
+                    <td><a href="{{ route('platform.businesses.show', $business) }}">Kelola</a></td>
                 </tr>
             @empty
-                <tr><td colspan="5">Belum ada bisnis terdaftar.</td></tr>
+                <tr><td colspan="6">Belum ada bisnis terdaftar.</td></tr>
             @endforelse
         </tbody>
     </table>

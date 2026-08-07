@@ -13,6 +13,16 @@ class IntegrationCredential extends Model
 
     public const PROVIDER_GOOGLE = 'google';
 
+    // credential_key untuk provider=whatsapp (Fase 8b). Tiap bisnis punya App Meta sendiri
+    // (keputusan arsitektur: lihat riwayat percakapan Fase 8), jadi keempatnya per-bisnis.
+    public const WHATSAPP_KEY_TOKEN = 'token';
+
+    public const WHATSAPP_KEY_PHONE_NUMBER_ID = 'phone_number_id';
+
+    public const WHATSAPP_KEY_APP_SECRET = 'app_secret';
+
+    public const WHATSAPP_KEY_VERIFY_TOKEN = 'verify_token';
+
     protected $fillable = [
         'business_id', 'provider', 'credential_key', 'encrypted_value', 'is_active',
         'expires_at', 'created_by',

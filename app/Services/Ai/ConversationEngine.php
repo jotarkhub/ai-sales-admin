@@ -111,7 +111,7 @@ class ConversationEngine
             return;
         }
 
-        $sendResult = $this->whatsAppProvider->sendTextMessage($lead->phone_number, $parsed->replyMessage);
+        $sendResult = $this->whatsAppProvider->sendTextMessage($business, $lead->phone_number, $parsed->replyMessage);
 
         if (! $sendResult->success) {
             // Balasan valid & lolos guardrail, tapi gagal terkirim (mis. gangguan jaringan

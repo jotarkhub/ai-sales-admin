@@ -41,17 +41,20 @@ return [
         'secret' => env('LEAD_INTAKE_SECRET'),
     ],
 
-    // WhatsApp Business Cloud API (Fase 3). 'provider' HARUS 'fake' kecuali di production
-    // dengan kredensial asli sudah diisi — ditegakkan App\Support\ProviderGuard saat boot.
+    // WhatsApp Business Cloud API. 'provider' HARUS 'fake' kecuali di production dengan
+    // kredensial asli sudah diisi — ditegakkan App\Support\ProviderGuard saat boot.
+    //
+    // SEJAK FASE 8b: token & phone_number_id TIDAK LAGI di sini — tiap bisnis (klien) punya
+    // App Meta & nomor sendiri, disimpan terenkripsi per bisnis di tabel integration_credentials
+    // lewat panel platform owner. Lihat App\Services\WhatsApp\WhatsAppCredentialResolver.
+    //
+    // verify_token & app_secret MASIH global untuk sementara (dipakai memverifikasi webhook
+    // masuk) — jadi per bisnis di Fase 8c begitu routing webhook per bisnis dibangun, karena
+    // tiap klien juga punya App Secret sendiri (konsekuensi keputusan "App Meta sendiri-sendiri").
     'whatsapp' => [
         'provider' => env('WHATSAPP_PROVIDER', 'fake'),
-        'token' => env('WHATSAPP_TOKEN'),
-        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'api_version' => env('WHATSAPP_API_VERSION', 'v20.0'),
         'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
-        // App Secret dari Meta for Developers — dipakai memverifikasi X-Hub-Signature-256 di
-        // webhook masuk (App\Http\Middleware\VerifyWhatsAppWebhookSignature). BEDA dari
-        // WHATSAPP_TOKEN (access token) di atas.
         'app_secret' => env('WHATSAPP_APP_SECRET'),
     ],
 

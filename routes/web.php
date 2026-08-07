@@ -67,5 +67,8 @@ Route::middleware('auth')->group(function () {
     // (business_id-nya null, lihat App\Http\Controllers\Concerns\ResolvesCurrentBusiness).
     Route::middleware('role:platform_owner')->prefix('platform')->name('platform.')->group(function () {
         Route::get('bisnis', [PlatformBusinessController::class, 'index'])->name('businesses.index');
+        Route::get('bisnis/{business}', [PlatformBusinessController::class, 'show'])->name('businesses.show');
+        Route::put('bisnis/{business}/kredensial/whatsapp', [PlatformBusinessController::class, 'updateWhatsAppCredentials'])
+            ->name('businesses.credentials.whatsapp.update');
     });
 });

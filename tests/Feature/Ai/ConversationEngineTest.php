@@ -91,7 +91,7 @@ class ConversationEngineTest extends TestCase
         {
             public function __construct(private readonly string $error) {}
 
-            public function sendTextMessage(string $to, string $body): WhatsAppSendResult
+            public function sendTextMessage(Business $business, string $to, string $body): WhatsAppSendResult
             {
                 return WhatsAppSendResult::failure($this->error);
             }

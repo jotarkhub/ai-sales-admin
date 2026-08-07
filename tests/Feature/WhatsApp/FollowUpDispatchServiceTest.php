@@ -60,7 +60,7 @@ class FollowUpDispatchServiceTest extends TestCase
         {
             public function __construct(private readonly string $errorMessage) {}
 
-            public function sendTextMessage(string $to, string $body): WhatsAppSendResult
+            public function sendTextMessage(Business $business, string $to, string $body): WhatsAppSendResult
             {
                 return WhatsAppSendResult::failure($this->errorMessage);
             }

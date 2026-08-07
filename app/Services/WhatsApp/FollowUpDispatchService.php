@@ -83,7 +83,7 @@ class FollowUpDispatchService
             return 'skipped';
         }
 
-        $sendResult = $this->provider->sendTextMessage($lead->phone_number, $body);
+        $sendResult = $this->provider->sendTextMessage($business, $lead->phone_number, $body);
 
         if ($sendResult->success) {
             $this->recordSent($followUp, $lead, $business, $body, $sendResult->providerMessageId);

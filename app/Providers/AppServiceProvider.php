@@ -41,9 +41,9 @@ class AppServiceProvider extends ServiceProvider
 
         ProviderGuard::assertNotFakeInProduction($this->app->environment(), $provider, 'WhatsApp');
 
-        $this->app->singleton(WhatsAppProviderContract::class, function () use ($provider) {
+        $this->app->singleton(WhatsAppProviderContract::class, function ($app) use ($provider) {
             return $provider === 'meta'
-                ? new MetaWhatsAppProvider
+                ? $app->make(MetaWhatsAppProvider::class)
                 : new FakeWhatsAppProvider;
         });
     }

@@ -87,7 +87,7 @@ Keputusan: tiap klien (bisnis) punya App Meta WhatsApp sendiri-sendiri (bukan sa
 Meta bersama), platform owner mendaftarkan bisnis baru secara manual. Kredensial OpenAI
 tetap satu untuk seluruh platform (bukan per klien).
 
-**Fase 8a — Role & akses platform owner: `IMPLEMENTED_UNVERIFIED`.**
+**Fase 8a — Role & akses platform owner: `CI_TEST_PASSED`.** Run [#21](https://github.com/jotarkhub/ai-sales-admin/actions) commit `e7b7f7e` hijau. Lokal: 116 passed (384 assertions), Pint hijau.
 
 - Ditemukan & diperbaiki bug lama: `ResolvesCurrentBusiness` (dipakai Business Configuration,
   Lead Fields, Knowledge Base, daftar Lead) sebelumnya ambil bisnis lewat
@@ -109,8 +109,26 @@ tetap satu untuk seluruh platform (bukan per klien).
   owner (positif & negatif), redirect login. **Belum dijalankan user — menunggu bukti nyata
   sebelum naik ke `LOCAL_TEST_PASSED`/`CI_TEST_PASSED`.**
 
-**Fase 8b/8c/8d — kredensial WhatsApp per bisnis, webhook per bisnis, form tambah bisnis:**
-`DESIGNED` (lihat rencana di riwayat percakapan), belum dikerjakan.
+**Fase 8b — Kredensial WhatsApp per bisnis: `IMPLEMENTED_UNVERIFIED`.**
+
+- `WhatsAppProviderContract::sendTextMessage()` sekarang WAJIB terima `Business` — perubahan
+  breaking yang disengaja, supaya mustahil lupa "kirim untuk bisnis mana". Diperbarui di semua
+  pemanggil: `FollowUpDispatchService`, `ConversationEngine`.
+- `MetaWhatsAppProvider` tidak lagi baca `WHATSAPP_TOKEN`/`WHATSAPP_PHONE_NUMBER_ID` dari
+  `.env` global (dihapus dari `config/services.php` & `.env.example`) — sekarang lewat
+  `WhatsAppCredentialResolver`, baca dari `integration_credentials` milik bisnis yang sedang
+  dikirimi pesan. `verify_token`/`app_secret` MASIH global untuk sementara (dipakai webhook,
+  jadi per bisnis di Fase 8c).
+- Panel baru `platform.businesses.show` (`GET/PUT /platform/bisnis/{id}`) — platform owner
+  isi token & phone_number_id per bisnis. Nilai asli TIDAK PERNAH ditampilkan balik di
+  view maupun audit_logs (cuma status "terisi/belum" + field mana yang berubah).
+  Update parsial: field yang dikosongkan tidak menimpa nilai tersimpan.
+- Test baru: isolasi kredensial antar 2 bisnis (kredensial bisnis A tidak pernah dipakai
+  kirim pesan bisnis B), akses form (platform owner vs admin biasa), audit log tidak
+  mengandung nilai asli. **Belum dijalankan user.**
+
+**Fase 8c/8d — webhook per bisnis, form tambah bisnis:** `DESIGNED` (lihat rencana di riwayat
+percakapan), belum dikerjakan.
 
 ## Provider Fake — Aturan Keras
 

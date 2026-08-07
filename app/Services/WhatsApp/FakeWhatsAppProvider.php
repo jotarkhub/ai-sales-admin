@@ -3,6 +3,7 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\WhatsAppProviderContract;
+use App\Models\Business;
 use Illuminate\Support\Str;
 
 /**
@@ -12,17 +13,17 @@ use Illuminate\Support\Str;
  */
 class FakeWhatsAppProvider implements WhatsAppProviderContract
 {
-    /** @var array<int, array{to: string, body: string}> */
+    /** @var array<int, array{business_id: int, to: string, body: string}> */
     private array $sentMessages = [];
 
-    public function sendTextMessage(string $to, string $body): WhatsAppSendResult
+    public function sendTextMessage(Business $business, string $to, string $body): WhatsAppSendResult
     {
-        $this->sentMessages[] = ['to' => $to, 'body' => $body];
+        $this->sentMessages[] = ['business_id' => $business->id, 'to' => $to, 'body' => $body];
 
         return WhatsAppSendResult::success(providerMessageId: 'fake-'.Str::uuid()->toString());
     }
 
-    /** @return array<int, array{to: string, body: string}> */
+    /** @return array<int, array{business_id: int, to: string, body: string}> */
     public function sentMessages(): array
     {
         return $this->sentMessages;
