@@ -18,11 +18,17 @@ use App\Services\Lead\PhoneNumberNormalizer;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 use Throwable;
 
 /**
  * Terima payload webhook WhatsApp Cloud API (sudah lolos verifikasi signature di
  * App\Http\Middleware\VerifyWhatsAppWebhookSignature) dan simpan sebagai data lokal.
+ *
+ * $business WAJIB eksplisit sejak Fase 8c — diambil dari route model binding
+ * {business:webhook_slug} (lihat App\Http\Controllers\Api\V1\WhatsAppWebhookController),
+ * BUKAN lagi ditebak lewat "bisnis aktif pertama di database" seperti sebelum Fase 8. URL
+ * webhook Meta memang sudah berbeda per bisnis, jadi kita SELALU tahu ini punya bisnis mana.
  *
  * Setelah pesan inbound tersimpan (ingestion beres, transaksi commit), diteruskan ke
  * App\Services\Ai\ConversationEngine untuk memutuskan balasan AI — dipanggil DI LUAR
@@ -37,7 +43,7 @@ class WhatsAppWebhookService
         private readonly ConversationEngine $conversationEngine,
     ) {}
 
-    public function handle(array $payload): void
+    public function handle(array $payload, Business $business): void
     {
         foreach ($payload['entry'] ?? [] as $entry) {
             foreach ($entry['changes'] ?? [] as $change) {
@@ -50,17 +56,17 @@ class WhatsAppWebhookService
                 $value = $change['value'] ?? [];
 
                 foreach ($value['messages'] ?? [] as $messageItem) {
-                    $this->handleInboundMessage($messageItem, $value);
+                    $this->handleInboundMessage($messageItem, $value, $business);
                 }
 
                 foreach ($value['statuses'] ?? [] as $statusItem) {
-                    $this->handleStatusUpdate($statusItem);
+                    $this->handleStatusUpdate($statusItem, $business);
                 }
             }
         }
     }
 
-    private function handleInboundMessage(array $messageItem, array $value): void
+    private function handleInboundMessage(array $messageItem, array $value, Business $business): void
     {
         $externalId = $messageItem['id'] ?? null;
 
@@ -91,13 +97,11 @@ class WhatsAppWebhookService
         $conversation = null;
 
         try {
-            DB::transaction(function () use ($messageItem, $value, $externalId, $webhookEvent, &$conversation) {
-                $business = Business::where('is_active', true)->firstOrFail();
-
+            DB::transaction(function () use ($messageItem, $value, $business, $webhookEvent, &$conversation) {
                 $rawFrom = $messageItem['from'] ?? null;
 
                 if (blank($rawFrom)) {
-                    throw new \RuntimeException('Field "from" tidak ada pada pesan masuk.');
+                    throw new RuntimeException('Field "from" tidak ada pada pesan masuk.');
                 }
 
                 $phoneNumber = $this->phoneNormalizer->normalize($rawFrom);
@@ -120,7 +124,7 @@ class WhatsAppWebhookService
                     'lead_id' => $lead->id,
                     'direction' => Message::DIRECTION_INBOUND,
                     'sender_type' => 'customer',
-                    'whatsapp_message_id' => $externalId,
+                    'whatsapp_message_id' => $messageItem['id'],
                     'body' => $body,
                     'media_type' => $mediaType,
                     'latest_status' => 'received',
@@ -207,7 +211,7 @@ class WhatsAppWebhookService
         return [null, $type];
     }
 
-    private function handleStatusUpdate(array $statusItem): void
+    private function handleStatusUpdate(array $statusItem, Business $business): void
     {
         $messageId = $statusItem['id'] ?? null;
         $status = $statusItem['status'] ?? null;
@@ -239,12 +243,17 @@ class WhatsAppWebhookService
         }
 
         try {
-            $message = Message::where('whatsapp_message_id', $messageId)->first();
+            // Diperketat lagi di Fase 8c: hanya cocokkan message milik LEAD BISNIS INI. Tanpa
+            // ini, webhook status bisnis A (kalau whatsapp_message_id-nya kebetulan sama, mis.
+            // gara-gara replay/serangan) bisa saja meng-update status pesan milik bisnis lain.
+            $message = Message::where('whatsapp_message_id', $messageId)
+                ->whereHas('lead', fn ($query) => $query->where('business_id', $business->id))
+                ->first();
 
             if (! $message) {
                 $webhookEvent->update([
                     'status' => WebhookEvent::STATUS_FAILED,
-                    'error_message' => 'Message lokal tidak ditemukan untuk whatsapp_message_id ini.',
+                    'error_message' => 'Message lokal tidak ditemukan untuk whatsapp_message_id ini (di bisnis ini).',
                 ]);
 
                 return;

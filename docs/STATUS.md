@@ -109,7 +109,7 @@ tetap satu untuk seluruh platform (bukan per klien).
   owner (positif & negatif), redirect login. **Belum dijalankan user — menunggu bukti nyata
   sebelum naik ke `LOCAL_TEST_PASSED`/`CI_TEST_PASSED`.**
 
-**Fase 8b — Kredensial WhatsApp per bisnis: `IMPLEMENTED_UNVERIFIED`.**
+**Fase 8b — Kredensial WhatsApp per bisnis: `CI_TEST_PASSED`.** Run [#22](https://github.com/jotarkhub/ai-sales-admin/actions) commit `f40102a` hijau. Lokal: 121 passed (399 assertions), Pint hijau (1 style issue auto-fixed).
 
 - `WhatsAppProviderContract::sendTextMessage()` sekarang WAJIB terima `Business` — perubahan
   breaking yang disengaja, supaya mustahil lupa "kirim untuk bisnis mana". Diperbarui di semua
@@ -125,10 +125,32 @@ tetap satu untuk seluruh platform (bukan per klien).
   Update parsial: field yang dikosongkan tidak menimpa nilai tersimpan.
 - Test baru: isolasi kredensial antar 2 bisnis (kredensial bisnis A tidak pernah dipakai
   kirim pesan bisnis B), akses form (platform owner vs admin biasa), audit log tidak
-  mengandung nilai asli. **Belum dijalankan user.**
+  mengandung nilai asli.
 
-**Fase 8c/8d — webhook per bisnis, form tambah bisnis:** `DESIGNED` (lihat rencana di riwayat
-percakapan), belum dikerjakan.
+**Fase 8c — Webhook per bisnis: `IMPLEMENTED_UNVERIFIED`.**
+
+- URL webhook Meta sekarang per bisnis: `/api/v1/whatsapp/webhook/{webhook_slug}` (GET
+  verify & POST receive), bukan satu URL global lagi — konsekuensi langsung dari keputusan
+  "tiap klien App Meta sendiri" (Fase 8, Opsi B). `webhook_slug` = string acak 40 karakter,
+  dibuat otomatis saat `Business` dibuat (`Business::booted()`), BUKAN ID auto-increment yang
+  gampang ditebak/diurut.
+- `VerifyWhatsAppWebhookSignature` & `WhatsAppWebhookController::verify()` sekarang resolve
+  App Secret/Verify Token dari `integration_credentials` MILIK BISNIS DI ROUTE (lewat route
+  model binding `{business:webhook_slug}`), bukan `config('services.whatsapp.*')` global —
+  entry itu sudah dihapus dari `config/services.php`. Tidak ada fallback ke config global sama
+  sekali: kredensial bisnis A tidak boleh pernah dipakai memvalidasi webhook bisnis B.
+- `WhatsAppWebhookService::handle()` sekarang WAJIB menerima `Business $business` eksplisit —
+  bug lama (`Business::where('is_active', true)->firstOrFail()`, sama persis dengan bug
+  `ResolvesCurrentBusiness` yang diperbaiki di Fase 8a) sudah dihapus. Lookup status pesan
+  (`handleStatusUpdate`) juga diperketat: hanya cocokkan `Message` yang lead-nya milik bisnis
+  di route, bukan cari `whatsapp_message_id` lintas seluruh database.
+- Test baru: handshake per bisnis, bisnis tidak dikenal (404), kredensial webhook belum
+  diisi (503), signature/App Secret bisnis lain ditolak, nomor yang sama mengirim ke dua
+  webhook bisnis berbeda menghasilkan DUA lead terpisah (bukti isolasi paling langsung).
+  **Belum dijalankan user — juga perlu `php artisan migrate` untuk kolom `webhook_slug` baru.**
+
+**Fase 8d — form tambah bisnis:** `DESIGNED` (lihat rencana di riwayat percakapan), belum
+dikerjakan.
 
 ## Provider Fake — Aturan Keras
 

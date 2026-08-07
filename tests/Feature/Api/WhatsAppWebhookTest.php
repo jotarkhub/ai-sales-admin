@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\Business;
 use App\Models\Conversation;
+use App\Models\IntegrationCredential;
 use App\Models\Lead;
 use App\Models\LeadSource;
 use App\Models\Message;
@@ -12,11 +13,17 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
+/**
+ * Fase 8c — webhook per bisnis (bukan satu URL global lagi). $this->business dibuat di setUp()
+ * SUDAH punya App Secret + Verify Token sendiri di integration_credentials, supaya test yang
+ * fokus ke ingestion pesan tidak perlu mengulang setup itu. Isolasi antar bisnis diuji terpisah
+ * di test_*_bisnis_lain_*.
+ */
 class WhatsAppWebhookTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const SECRET = 'testing-app-secret-tidak-untuk-produksi'; // sama dengan .env.testing
+    private const SECRET = 'testing-app-secret-tidak-untuk-produksi';
 
     private const VERIFY_TOKEN = 'testing-verify-token-tidak-untuk-produksi';
 
@@ -31,9 +38,35 @@ class WhatsAppWebhookTest extends TestCase
             'timezone' => 'Asia/Jakarta',
             'is_active' => true,
         ]);
+
+        $this->giveWebhookCredentials($this->business);
     }
 
-    private function postSigned(array $payload, ?string $secret = null): TestResponse
+    private function giveWebhookCredentials(Business $business, string $appSecret = self::SECRET, string $verifyToken = self::VERIFY_TOKEN): void
+    {
+        IntegrationCredential::create([
+            'business_id' => $business->id,
+            'provider' => IntegrationCredential::PROVIDER_WHATSAPP,
+            'credential_key' => IntegrationCredential::WHATSAPP_KEY_APP_SECRET,
+            'encrypted_value' => $appSecret,
+            'is_active' => true,
+        ]);
+
+        IntegrationCredential::create([
+            'business_id' => $business->id,
+            'provider' => IntegrationCredential::PROVIDER_WHATSAPP,
+            'credential_key' => IntegrationCredential::WHATSAPP_KEY_VERIFY_TOKEN,
+            'encrypted_value' => $verifyToken,
+            'is_active' => true,
+        ]);
+    }
+
+    private function webhookUrl(?Business $business = null): string
+    {
+        return '/api/v1/whatsapp/webhook/'.($business ?? $this->business)->webhook_slug;
+    }
+
+    private function postSigned(array $payload, ?string $secret = null, ?Business $business = null): TestResponse
     {
         $body = json_encode($payload);
         $signature = hash_hmac('sha256', $body, $secret ?? self::SECRET);
@@ -44,7 +77,7 @@ class WhatsAppWebhookTest extends TestCase
             'X-Hub-Signature-256' => 'sha256='.$signature,
         ]);
 
-        return $this->call('POST', '/api/v1/whatsapp/webhook', [], [], [], $server, $body);
+        return $this->call('POST', $this->webhookUrl($business), [], [], [], $server, $body);
     }
 
     private function textMessagePayload(string $from, string $id, string $body, ?string $contactName = null): array
@@ -108,7 +141,7 @@ class WhatsAppWebhookTest extends TestCase
 
     public function test_verify_handshake_dengan_token_benar_mengembalikan_challenge(): void
     {
-        $response = $this->get('/api/v1/whatsapp/webhook?hub.mode=subscribe&hub.verify_token='.self::VERIFY_TOKEN.'&hub.challenge=echo-123');
+        $response = $this->get($this->webhookUrl().'?hub.mode=subscribe&hub.verify_token='.self::VERIFY_TOKEN.'&hub.challenge=echo-123');
 
         $response->assertOk();
         $response->assertSee('echo-123');
@@ -116,16 +149,23 @@ class WhatsAppWebhookTest extends TestCase
 
     public function test_verify_handshake_dengan_token_salah_ditolak(): void
     {
-        $response = $this->get('/api/v1/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=salah&hub.challenge=echo-123');
+        $response = $this->get($this->webhookUrl().'?hub.mode=subscribe&hub.verify_token=salah&hub.challenge=echo-123');
 
         $response->assertForbidden();
+    }
+
+    public function test_verify_handshake_bisnis_tidak_dikenal_404(): void
+    {
+        $response = $this->get('/api/v1/whatsapp/webhook/slug-tidak-ada?hub.mode=subscribe&hub.verify_token='.self::VERIFY_TOKEN.'&hub.challenge=echo-123');
+
+        $response->assertNotFound();
     }
 
     public function test_receive_tanpa_signature_ditolak_401(): void
     {
         $body = json_encode($this->textMessagePayload('628123456789', 'wamid.NOAUTH', 'Halo'));
 
-        $response = $this->call('POST', '/api/v1/whatsapp/webhook', [], [], [], $this->transformHeadersToServerVars([
+        $response = $this->call('POST', $this->webhookUrl(), [], [], [], $this->transformHeadersToServerVars([
             'Content-Type' => 'application/json',
         ]), $body);
 
@@ -139,13 +179,29 @@ class WhatsAppWebhookTest extends TestCase
         $response->assertUnauthorized();
     }
 
-    public function test_receive_app_secret_belum_dikonfigurasi_menolak_503(): void
+    public function test_receive_kredensial_webhook_belum_dikonfigurasi_menolak_503(): void
     {
-        config(['services.whatsapp.app_secret' => null]);
+        $business = Business::create(['name' => 'Bisnis Belum Setup (Data Pengujian)', 'timezone' => 'Asia/Jakarta', 'is_active' => true]);
+        // Sengaja TIDAK memanggil giveWebhookCredentials() untuk bisnis ini.
 
-        $response = $this->postSigned($this->textMessagePayload('628123456789', 'wamid.NOSECRET', 'Halo'));
+        $response = $this->postSigned($this->textMessagePayload('628123456789', 'wamid.NOSECRET', 'Halo'), business: $business);
 
         $response->assertStatus(503);
+    }
+
+    public function test_kredensial_bisnis_lain_tidak_bisa_dipakai_verifikasi_signature_bisnis_ini(): void
+    {
+        // Isolasi multi-tenant (Fase 8c) — App Secret bisnis lain tidak boleh lolos verifikasi
+        // untuk webhook bisnis ini, walau signature-nya secara matematis valid untuk secret itu.
+        $otherBusiness = Business::create(['name' => 'Bisnis Lain (Data Pengujian)', 'timezone' => 'Asia/Jakarta', 'is_active' => true]);
+        $this->giveWebhookCredentials($otherBusiness, appSecret: 'secret-milik-bisnis-lain');
+
+        $response = $this->postSigned(
+            $this->textMessagePayload('628123456789', 'wamid.CROSSTENANT', 'Halo'),
+            secret: 'secret-milik-bisnis-lain', // signature dihitung pakai secret bisnis LAIN
+        ); // tapi dikirim ke URL webhook $this->business
+
+        $response->assertUnauthorized();
     }
 
     public function test_pesan_teks_dari_lead_yang_sudah_ada_tersimpan(): void
@@ -189,12 +245,35 @@ class WhatsAppWebhookTest extends TestCase
         $lead = Lead::where('phone_number', '+628199988877')->first();
         $this->assertNotNull($lead);
         $this->assertSame('Siti Aminah', $lead->name);
+        $this->assertSame($this->business->id, $lead->business_id);
         $this->assertSame(LeadSource::WHATSAPP_INBOUND, $lead->leadSource->slug);
 
         $this->assertDatabaseHas('lead_activities', [
             'lead_id' => $lead->id,
             'type' => 'lead_created_from_whatsapp_inbound',
         ]);
+    }
+
+    public function test_pesan_ke_webhook_bisnis_lain_masuk_ke_lead_bisnis_lain_bukan_bisnis_ini(): void
+    {
+        // Isolasi multi-tenant (Fase 8c) — bukti utama: nomor yang sama mengirim pesan ke DUA
+        // webhook bisnis berbeda harus jadi DUA lead terpisah, masing-masing di bisnisnya sendiri.
+        $otherBusiness = Business::create(['name' => 'Bisnis Lain (Data Pengujian)', 'timezone' => 'Asia/Jakarta', 'is_active' => true]);
+        $this->giveWebhookCredentials($otherBusiness, appSecret: 'secret-milik-bisnis-lain');
+
+        $this->postSigned($this->textMessagePayload('628177778888', 'wamid.A1', 'Halo bisnis ini'))->assertOk();
+        $this->postSigned(
+            $this->textMessagePayload('628177778888', 'wamid.B1', 'Halo bisnis lain'),
+            secret: 'secret-milik-bisnis-lain',
+            business: $otherBusiness,
+        )->assertOk();
+
+        $this->assertSame(2, Lead::where('phone_number', '+628177778888')->count());
+        $leadThisBusiness = Lead::where('phone_number', '+628177778888')->where('business_id', $this->business->id)->firstOrFail();
+        $leadOtherBusiness = Lead::where('phone_number', '+628177778888')->where('business_id', $otherBusiness->id)->firstOrFail();
+
+        $this->assertDatabaseHas('messages', ['lead_id' => $leadThisBusiness->id, 'whatsapp_message_id' => 'wamid.A1']);
+        $this->assertDatabaseHas('messages', ['lead_id' => $leadOtherBusiness->id, 'whatsapp_message_id' => 'wamid.B1']);
     }
 
     public function test_pesan_duplikat_tidak_diproses_dua_kali(): void

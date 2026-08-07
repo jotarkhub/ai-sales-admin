@@ -44,18 +44,14 @@ return [
     // WhatsApp Business Cloud API. 'provider' HARUS 'fake' kecuali di production dengan
     // kredensial asli sudah diisi — ditegakkan App\Support\ProviderGuard saat boot.
     //
-    // SEJAK FASE 8b: token & phone_number_id TIDAK LAGI di sini — tiap bisnis (klien) punya
-    // App Meta & nomor sendiri, disimpan terenkripsi per bisnis di tabel integration_credentials
-    // lewat panel platform owner. Lihat App\Services\WhatsApp\WhatsAppCredentialResolver.
-    //
-    // verify_token & app_secret MASIH global untuk sementara (dipakai memverifikasi webhook
-    // masuk) — jadi per bisnis di Fase 8c begitu routing webhook per bisnis dibangun, karena
-    // tiap klien juga punya App Secret sendiri (konsekuensi keputusan "App Meta sendiri-sendiri").
+    // SEJAK FASE 8b/8c: token, phone_number_id, verify_token, app_secret TIDAK LAGI di sini —
+    // tiap bisnis (klien) punya App Meta & nomor sendiri, disimpan terenkripsi per bisnis di
+    // tabel integration_credentials lewat panel platform owner. Lihat
+    // App\Services\WhatsApp\WhatsAppCredentialResolver. Yang tersisa di sini cuma hal yang
+    // benar-benar sama untuk semua bisnis: saklar fake/nyata & versi Graph API.
     'whatsapp' => [
         'provider' => env('WHATSAPP_PROVIDER', 'fake'),
         'api_version' => env('WHATSAPP_API_VERSION', 'v20.0'),
-        'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
-        'app_secret' => env('WHATSAPP_APP_SECRET'),
     ],
 
     // OpenAI Conversation Engine (Fase 4). Sama seperti whatsapp di atas — 'provider' HARUS

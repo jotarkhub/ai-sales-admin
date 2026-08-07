@@ -8,6 +8,7 @@ use App\Models\Business;
 use App\Models\Conversation;
 use App\Models\Escalation;
 use App\Models\FollowUp;
+use App\Models\IntegrationCredential;
 use App\Models\Lead;
 use App\Models\Message;
 use App\Models\Role;
@@ -47,6 +48,16 @@ class FullPipelineTest extends TestCase
             'timezone' => 'Asia/Jakarta',
             'is_active' => true,
             'message_templates' => ['auto_reply_awal' => 'Halo! Terima kasih sudah mendaftar, ada yang bisa kami bantu?'],
+        ]);
+
+        // Fase 8c — webhook per bisnis, jadi test end-to-end butuh kredensial webhook bisnis
+        // ini sendiri (dulu cukup WHATSAPP_APP_SECRET global di .env.testing).
+        IntegrationCredential::create([
+            'business_id' => $this->business->id,
+            'provider' => IntegrationCredential::PROVIDER_WHATSAPP,
+            'credential_key' => IntegrationCredential::WHATSAPP_KEY_APP_SECRET,
+            'encrypted_value' => self::WEBHOOK_SECRET,
+            'is_active' => true,
         ]);
     }
 
@@ -112,7 +123,7 @@ class FullPipelineTest extends TestCase
         $body = json_encode($payload);
         $signature = hash_hmac('sha256', $body, self::WEBHOOK_SECRET);
 
-        return $this->call('POST', '/api/v1/whatsapp/webhook', [], [], [], $this->transformHeadersToServerVars([
+        return $this->call('POST', '/api/v1/whatsapp/webhook/'.$this->business->webhook_slug, [], [], [], $this->transformHeadersToServerVars([
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
             'X-Hub-Signature-256' => 'sha256='.$signature,
@@ -186,7 +197,7 @@ class FullPipelineTest extends TestCase
         ];
         $statusBody = json_encode($statusPayload);
         $statusSignature = hash_hmac('sha256', $statusBody, self::WEBHOOK_SECRET);
-        $this->call('POST', '/api/v1/whatsapp/webhook', [], [], [], $this->transformHeadersToServerVars([
+        $this->call('POST', '/api/v1/whatsapp/webhook/'.$this->business->webhook_slug, [], [], [], $this->transformHeadersToServerVars([
             'Content-Type' => 'application/json',
             'X-Hub-Signature-256' => 'sha256='.$statusSignature,
         ]), $statusBody)->assertOk();

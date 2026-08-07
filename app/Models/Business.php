@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Business extends Model
 {
@@ -77,5 +78,20 @@ class Business extends Model
     public function leadFieldDefinitions(): HasMany
     {
         return $this->hasMany(LeadFieldDefinition::class);
+    }
+
+    /**
+     * webhook_slug SENGAJA tidak masuk $fillable — dibuat sistem, bukan admin, supaya tidak
+     * bisa diubah lewat mass assignment. Dipakai sebagai bagian URL webhook WhatsApp masuk
+     * (Fase 8c, /api/v1/whatsapp/webhook/{webhook_slug}) alih-alih ID auto-increment yang
+     * gampang ditebak/diurut.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Business $business) {
+            if (blank($business->webhook_slug)) {
+                $business->webhook_slug = Str::random(40);
+            }
+        });
     }
 }

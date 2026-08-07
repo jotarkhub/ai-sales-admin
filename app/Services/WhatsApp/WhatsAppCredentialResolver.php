@@ -39,4 +39,29 @@ class WhatsAppCredentialResolver
             apiVersion: config('services.whatsapp.api_version', 'v20.0'),
         );
     }
+
+    /**
+     * Fase 8c — App Secret (verifikasi signature webhook masuk) & Verify Token (handshake GET)
+     * milik satu bisnis. TIDAK ADA fallback ke config global lagi: konsekuensi keputusan "tiap
+     * klien App Meta sendiri" (lihat docs/STATUS.md "Fase 8") berarti App Secret bisnis A tidak
+     * boleh dipakai memvalidasi webhook bisnis B, jadi kalau belum diisi -> tolak, bukan tebak.
+     */
+    public function resolveWebhookSecrets(Business $business): ?WhatsAppWebhookSecrets
+    {
+        $rows = IntegrationCredential::query()
+            ->where('business_id', $business->id)
+            ->where('provider', IntegrationCredential::PROVIDER_WHATSAPP)
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('credential_key');
+
+        $appSecret = $rows->get(IntegrationCredential::WHATSAPP_KEY_APP_SECRET)?->encrypted_value;
+        $verifyToken = $rows->get(IntegrationCredential::WHATSAPP_KEY_VERIFY_TOKEN)?->encrypted_value;
+
+        if (blank($appSecret) || blank($verifyToken)) {
+            return null;
+        }
+
+        return new WhatsAppWebhookSecrets(appSecret: $appSecret, verifyToken: $verifyToken);
+    }
 }
