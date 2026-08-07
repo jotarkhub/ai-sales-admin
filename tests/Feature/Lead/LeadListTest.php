@@ -97,4 +97,32 @@ class LeadListTest extends TestCase
 
         $response->assertRedirect(route('login'));
     }
+
+    public function test_agent_bisnis_lain_tidak_melihat_lead_bisnis_ini(): void
+    {
+        // Isolasi multi-tenant (Fase 8a) — LeadController::index() lewat currentBusiness(),
+        // yang sebelum Fase 8a selalu ambil "bisnis aktif pertama" di database tanpa peduli
+        // agent yang login itu staf bisnis mana. Dengan dua bisnis aktif, bug ini baru bisa
+        // benar-benar diuji.
+        $otherBusiness = Business::create(['name' => 'Bisnis Lain (Data Pengujian)', 'timezone' => 'Asia/Jakarta', 'is_active' => true]);
+        $agentRole = Role::create(['name' => 'Agent', 'slug' => Role::AGENT]);
+        $otherAgent = User::factory()->create(['is_active' => true, 'business_id' => $otherBusiness->id]);
+        $otherAgent->roles()->attach($agentRole);
+
+        $this->makeLead(['name' => 'Lead Bisnis Ini']);
+        Lead::create([
+            'business_id' => $otherBusiness->id,
+            'lead_source_id' => $this->source->id,
+            'name' => 'Lead Bisnis Lain',
+            'phone_number' => '+628199999999',
+            'consent_whatsapp' => true,
+            'status' => 'new',
+        ]);
+
+        $response = $this->actingAs($otherAgent)->get(route('leads.index'));
+
+        $response->assertOk();
+        $response->assertSee('Lead Bisnis Lain');
+        $response->assertDontSee('Lead Bisnis Ini');
+    }
 }

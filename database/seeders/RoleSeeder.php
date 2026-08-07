@@ -13,6 +13,7 @@ class RoleSeeder extends Seeder
             ['name' => 'Administrator', 'slug' => Role::ADMIN, 'description' => 'Kendali penuh: konfigurasi bisnis, kredensial, semua data.'],
             ['name' => 'Supervisor', 'slug' => Role::SUPERVISOR, 'description' => 'Kelola lead, percakapan, knowledge base, follow-up.'],
             ['name' => 'Agent', 'slug' => Role::AGENT, 'description' => 'Menangani percakapan & takeover, tanpa akses konfigurasi.'],
+            ['name' => 'Platform Owner', 'slug' => Role::PLATFORM_OWNER, 'description' => 'Kelola semua bisnis (tenant) di platform — bukan operasional satu bisnis.'],
         ];
 
         foreach ($roles as $role) {

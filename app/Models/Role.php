@@ -14,6 +14,11 @@ class Role extends Model
 
     public const AGENT = 'agent';
 
+    // Tidak terikat satu business_id — lihat App\Http\Controllers\PlatformBusinessController.
+    // Dipisah dari admin/supervisor/agent karena wewenangnya lintas-bisnis (kelola tenant),
+    // bukan mengelola operasional satu bisnis.
+    public const PLATFORM_OWNER = 'platform_owner';
+
     protected $fillable = ['name', 'slug', 'description'];
 
     public function users(): BelongsToMany

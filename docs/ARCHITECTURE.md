@@ -506,9 +506,12 @@ sudah aktif, bukan daftar aspirasional.
 7. **AI mengubah status "won" secara otomatis** — dicegah di level aplikasi (bukan cuma prompt):
    endpoint ubah status ke `won` wajib melalui aksi admin eksplisit, model hanya boleh
    merekomendasikan.
-8. **Multi-bisnis di masa depan** — MVP pakai satu `business_id` aktif, tapi semua tabel inti
-   sudah memiliki `business_id` FK sejak awal supaya migrasi ke multi-tenant tidak perlu
-   migration ulang skema besar-besaran.
+8. **Multi-bisnis** — sedang diaktifkan mulai Fase 8 (lihat `docs/STATUS.md` bagian "Fase 8 —
+   Platform Multi-Tenant"). MVP awal pakai satu `business_id` aktif, tapi semua tabel inti
+   sudah memiliki `business_id` FK sejak awal sehingga migrasi ke multi-tenant tidak perlu
+   migration ulang skema besar-besaran — cukup perbaiki tempat yang salah asumsi "satu bisnis
+   aktif" (mis. `ResolvesCurrentBusiness`, diperbaiki Fase 8a) dan tambah kredensial per bisnis
+   (`integration_credentials`, direncanakan Fase 8b).
 9. **Fake provider bocor ke production** — wajib guard di `AppServiceProvider`/config yang
    melempar exception saat boot jika `APP_ENV=production` tapi provider yang dikonfigurasi
    `fake`.

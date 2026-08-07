@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\AuditLog;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -28,6 +29,28 @@ class LoginTest extends TestCase
 
         $this->assertAuthenticatedAs($user);
         $response->assertRedirect(route('dashboard'));
+    }
+
+    public function test_platform_owner_diarahkan_ke_panel_bisnis_bukan_dashboard_biasa(): void
+    {
+        // Fase 8a — platform owner tidak punya business_id, jadi route('dashboard') biasa
+        // (middleware role:admin,supervisor,agent) akan menolaknya. Login harus mengarahkan
+        // ke panelnya sendiri, bukan ke dashboard yang pasti 403 untuknya.
+        $role = Role::create(['name' => 'Platform Owner', 'slug' => Role::PLATFORM_OWNER]);
+        $owner = User::factory()->create([
+            'password' => Hash::make('password-benar'),
+            'business_id' => null,
+            'is_active' => true,
+        ]);
+        $owner->roles()->attach($role);
+
+        $response = $this->post('/login', [
+            'email' => $owner->email,
+            'password' => 'password-benar',
+        ]);
+
+        $this->assertAuthenticatedAs($owner);
+        $response->assertRedirect(route('platform.businesses.index'));
     }
 
     public function test_login_ditolak_untuk_password_salah(): void

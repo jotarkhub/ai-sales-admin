@@ -49,5 +49,21 @@ class DatabaseSeeder extends Seeder
         if ($adminRole && ! $admin->roles()->where('role_id', $adminRole->id)->exists()) {
             $admin->roles()->attach($adminRole);
         }
+
+        // Platform owner (Fase 8a) — TIDAK terikat business_id, lintas semua bisnis/tenant.
+        $owner = User::query()->firstOrCreate(
+            ['email' => 'owner@example.test'],
+            [
+                'name' => 'Platform Owner (Data Pengujian)',
+                'password' => bcrypt('password'),
+                'business_id' => null,
+                'is_active' => true,
+            ]
+        );
+
+        $ownerRole = Role::query()->where('slug', Role::PLATFORM_OWNER)->first();
+        if ($ownerRole && ! $owner->roles()->where('role_id', $ownerRole->id)->exists()) {
+            $owner->roles()->attach($ownerRole);
+        }
     }
 }

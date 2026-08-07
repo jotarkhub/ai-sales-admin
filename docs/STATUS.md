@@ -49,6 +49,8 @@ test dengan fake provider sudah `CI_TEST_PASSED`.
 
 ## Fase 7 — Verifikasi End-to-End
 
+**Status: `CI_TEST_PASSED`** — Run [#20](https://github.com/jotarkhub/ai-sales-admin/actions) commit `dca07f7` hijau. Lokal: 109 passed (363 assertions), Pint hijau (1 style issue auto-fixed di file test ini).
+
 `tests/Feature/EndToEnd/FullPipelineTest.php` (2 test) memverifikasi modul-modul yang sudah
 `CI_TEST_PASSED` sendiri-sendiri benar-benar nyambung kalau dipakai berurutan seperti alur
 nyata, bukan cuma lulus terisolasi:
@@ -78,6 +80,37 @@ Webhook Receiver, Conversation Engine, Dashboard) benar dan konsisten, memakai
 Begitu kredensial & hosting tersedia, ulangi alur yang sama di lingkungan staging dengan
 `WHATSAPP_PROVIDER=meta` + `AI_PROVIDER=openai` sebelum status modul terkait naik ke
 `PRODUCTION_READY`.
+
+## Fase 8 — Platform Multi-Tenant
+
+Keputusan: tiap klien (bisnis) punya App Meta WhatsApp sendiri-sendiri (bukan satu App
+Meta bersama), platform owner mendaftarkan bisnis baru secara manual. Kredensial OpenAI
+tetap satu untuk seluruh platform (bukan per klien).
+
+**Fase 8a — Role & akses platform owner: `IMPLEMENTED_UNVERIFIED`.**
+
+- Ditemukan & diperbaiki bug lama: `ResolvesCurrentBusiness` (dipakai Business Configuration,
+  Lead Fields, Knowledge Base, daftar Lead) sebelumnya ambil bisnis lewat
+  `Business::where('is_active', true)->firstOrFail()` — benar selama cuma satu bisnis aktif,
+  tapi begitu ada bisnis kedua, staf bisnis B akan melihat/mengedit data bisnis A. Sekarang
+  berdasarkan `business_id` milik user yang login.
+- `BusinessPolicy::view`/`update` diperketat supaya cek `business_id` cocok (sebelumnya
+  `view` true untuk staf aktif mana pun tanpa cek bisnis — tidak pernah tereksploitasi lewat
+  route yang ada, tapi berbahaya begitu ada route/context baru).
+- Role baru `Role::PLATFORM_OWNER` — lintas bisnis, `business_id` nullable, tidak melalui
+  middleware `role:admin,supervisor,agent` yang mengunci ke satu bisnis.
+- Panel baru `platform.businesses.index` (`GET /platform/bisnis`) — daftar semua bisnis +
+  jumlah staf/lead per bisnis. Baru daftar sederhana; form "Tambah Bisnis Baru" menyusul di
+  Fase 8d.
+- Login platform owner diarahkan ke panel ini, bukan ke `dashboard` biasa (yang akan 403
+  karena platform owner bukan staf satu bisnis).
+- Seeder: user contoh `owner@example.test` / `password` (data pengujian, role platform_owner).
+- Test baru: isolasi Business Configuration & daftar Lead antar 2 bisnis, akses panel platform
+  owner (positif & negatif), redirect login. **Belum dijalankan user — menunggu bukti nyata
+  sebelum naik ke `LOCAL_TEST_PASSED`/`CI_TEST_PASSED`.**
+
+**Fase 8b/8c/8d — kredensial WhatsApp per bisnis, webhook per bisnis, form tambah bisnis:**
+`DESIGNED` (lihat rencana di riwayat percakapan), belum dikerjakan.
 
 ## Provider Fake — Aturan Keras
 

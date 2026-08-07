@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KnowledgeItemController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadFieldDefinitionController;
+use App\Http\Controllers\PlatformBusinessController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -59,5 +60,12 @@ Route::middleware('auth')->group(function () {
         Route::get('knowledge/{item}/edit', [KnowledgeItemController::class, 'edit'])->name('knowledge.edit');
         Route::put('knowledge/{item}', [KnowledgeItemController::class, 'update'])->name('knowledge.update');
         Route::patch('knowledge/{item}/toggle-publish', [KnowledgeItemController::class, 'togglePublish'])->name('knowledge.toggle-publish');
+    });
+
+    // Panel platform owner (Fase 8a) — lintas bisnis, terpisah total dari grup di atas.
+    // Tidak reuse middleware 'role:admin,...' karena platform_owner bukan staf satu bisnis
+    // (business_id-nya null, lihat App\Http\Controllers\Concerns\ResolvesCurrentBusiness).
+    Route::middleware('role:platform_owner')->prefix('platform')->name('platform.')->group(function () {
+        Route::get('bisnis', [PlatformBusinessController::class, 'index'])->name('businesses.index');
     });
 });

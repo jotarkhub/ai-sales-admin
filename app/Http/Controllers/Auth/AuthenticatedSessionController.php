@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Role;
 use App\Services\Audit\AuditLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,13 @@ class AuthenticatedSessionController extends Controller
             actor: $request->user(),
         );
 
-        return redirect()->intended(route('dashboard'));
+        // Platform owner tidak punya business_id -> tidak lolos middleware 'role:admin,supervisor,
+        // agent' di route dashboard biasa. Arahkan ke panel lintas-bisnisnya sendiri.
+        $destination = $request->user()->hasRole(Role::PLATFORM_OWNER)
+            ? route('platform.businesses.index')
+            : route('dashboard');
+
+        return redirect()->intended($destination);
     }
 
     public function destroy(Request $request): RedirectResponse
